@@ -6,8 +6,8 @@ from auth import username, API_SECRET
 wsse_auth = WSSEAuth(username, API_SECRET)
 
 """
-check for a specific shift, if people are contributing enough. Precisiely,
-determine if any Lab_TA are less than 1 std below the average number of students helped per TA 
+Check for a specific shift, if people are contributing enough. Precisiely,
+determine if any Lab_TA are less than 1 std below the mean number of students helped per TA 
 """
 
 def main():

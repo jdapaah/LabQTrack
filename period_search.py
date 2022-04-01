@@ -1,16 +1,29 @@
 from wsse.client.requests.auth import WSSEAuth
 from datetime import datetime
-from sys import argv
+from sys import stderr
 import requests
 from auth import username, API_SECRET
+from argparse import ArgumentParser
 
 wsse_auth = WSSEAuth(username, API_SECRET)
 
-'''Given netids as args, over the provided time period, check what days the TA has
-    attended the queue, and print out which students they spent too much time on'''
+"""
+Given netids as args, over the provided time period, check what days the TA has
+attended the queue, and print out which students they spent too much time on
+"""
 
 
 def main():
+    parser = ArgumentParser(
+        "Check the current attendance, and \nhow long they're been working with the current student")
+    parser.add_argument("--netid", "-t", nargs='+', type=str, default=[], help='Search by NetID substring')
+    parser.add_argument("--name", "-n", nargs='+', type=str, default=[], help='Search by name substring')
+    args = parser.parse_args()
+    netid_subs = args.netid
+    name_subs = [s.lower() for s in args.name]
+    if not (name_subs or netid_subs):
+        print("Needs at least one argument", file=stderr)
+        exit(1)
     start_day, end_day = "2022-02-14T00:00", "2022-03-01T00:00"
     url = "https://www.labqueue.io/api/v1/queues/intro-cs-lab/roster/"
     flagged_users = []
@@ -18,7 +31,16 @@ def main():
         result = requests.get(url, auth=wsse_auth)
         d: dict = result.json()
         for student in d['results']:
-            if not (len(argv) == 1 or student['netid'] in argv[1:]):
+            # check that not professor
+            if not student['grad_year']:
+                continue
+            # search ta name
+            if name_subs and any(ns in student['full_name'].lower() for ns in name_subs):
+                pass
+            # search ta netid
+            elif netid_subs and any(ns in student['netid'] for ns in netid_subs):
+                pass
+            else:
                 continue
             stats = good_attendance(student['netid'], start_day, end_day)
             if any(stats):

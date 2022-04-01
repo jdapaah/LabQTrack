@@ -5,11 +5,19 @@ from sys import stderr
 import requests
 from auth import username, API_SECRET
 
+
+
 wsse_auth = WSSEAuth(username, API_SECRET)
+"""
+Check if user X is currently in the queue, who they are working with,
+and how long they have been working with that person.
 
-
+Command Line Args:
+    Given args --netid/-t, give a substring of the TA's netid
+    Given args --name/-n, give a substring of the TA's name
+"""
 def main():
-    parser = ArgumentParser("Check the current attendance, and how ")
+    parser = ArgumentParser("Check the current attendance, and \nhow long they're been working with the current student")
     parser.add_argument("--netid", "-t", nargs='+', type=str, default=[], help='Search by NetID substring')
     parser.add_argument("--name", "-n", nargs='+', type=str, default=[], help='Search by name substring')
     args = parser.parse_args()
