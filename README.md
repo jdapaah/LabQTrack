@@ -1,2 +1,2 @@
 # LabQTrack
-Project to Help the Princeton University COS Lab TA program keep track of employee attendance.
+This project seeks to help the Princeton University COS Lab TA program track the attendance of their employees.
