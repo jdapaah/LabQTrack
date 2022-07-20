@@ -6,7 +6,7 @@ import os
 from urllib import response
 
 from dateutil import parser
-from flask import Flask, request, session
+from flask import Flask, session
 from flask import render_template, make_response, redirect, url_for
 from flask_talisman import Talisman
 
@@ -17,6 +17,12 @@ app = Flask(__name__)
 app.secret_key = os.urandom(16)
 
 
+@app.route('/landing', methods=['GET'])
+def landing_page():
+    html = render_template('landing.html')
+    response = make_response(html)
+    return response
+    
 @app.route('/', methods=['GET'])
 def home_page():
     if session.get('username'):
@@ -25,14 +31,6 @@ def home_page():
         return response
     else:
         return redirect('/landing')
-
-
-@app.route('/landing', methods=['GET'])
-def landing_page():
-    html = render_template('landing.html')
-    response = make_response(html)
-    return response
-
 
 @app.route('/next', methods=['GET'])
 def go_to_cas():
@@ -49,21 +47,21 @@ def homescreen():
     return response
 
 @app.route('/active', methods=['GET'])
-def landing_page():
+def active_page():
     html = render_template('active.html')
     response = make_response(html)
     return response
 
 
 @app.route('/period', methods=['GET'])
-def landing_page():
+def period_page():
     html = render_template('period.html')
     response = make_response(html)
     return response
 
 
 @app.route('/shift', methods=['GET'])
-def landing_page():
+def shift_page():
     html = render_template('shift.html')
     response = make_response(html)
     return response
