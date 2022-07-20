@@ -3,14 +3,13 @@ from datetime import datetime as dt
 from argparse import ArgumentParser
 from sys import stderr
 import requests
-from auth import username, API_SECRET
+from api_auth import username, API_SECRET
 
 
 
 wsse_auth = WSSEAuth(username, API_SECRET)
 """
-Check if user X is currently in the queue, who they are working with,
-and how long they have been working with that person.
+
 
 Command Line Args:
     Given args --netid/-t, give a substring of the TA's netid

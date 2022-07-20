@@ -2,7 +2,7 @@ from wsse.client.requests.auth import WSSEAuth
 from datetime import datetime
 from sys import stderr
 import requests
-from auth import username, API_SECRET
+from api_auth import username, API_SECRET
 from argparse import ArgumentParser
 
 wsse_auth = WSSEAuth(username, API_SECRET)
@@ -18,8 +18,14 @@ def main():
         "Check the current attendance, and \nhow long they're been working with the current student")
     parser.add_argument("--netid", "-t", nargs='+', type=str, default=[], help='Search by NetID substring')
     parser.add_argument("--name", "-n", nargs='+', type=str, default=[], help='Search by name substring')
+    parser.add_argument("--start", "-s", nargs="?", help="Start time as 4 digits, MMDD")
+    parser.add_argument("--end", "-e", nargs="?", help="End time as 4 digits, MMDD, defualt is today")
     args = parser.parse_args()
     netid_subs = args.netid
+    if not args.end:
+        end_day =
+    print(args.netid, args.name, args.start, args.end)
+    exit(0)
     name_subs = [s.lower() for s in args.name]
     if not (name_subs or netid_subs):
         print("Needs at least one argument", file=stderr)
@@ -52,7 +58,7 @@ def main():
 
 def good_attendance(netid, start_str, end_str):
     print(netid)
-    format_str = "%Y-%m-%dT%H:%M"
+    format_str = "%m%d"
     start_day = datetime.strptime(start_str, format_str)
     end_day = datetime.strptime(end_str, format_str)
 

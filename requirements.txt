@@ -1,2 +1,6 @@
 pywsse
 requests
+Flask
+flask_talisman
+python-dateutil
+Jinja2

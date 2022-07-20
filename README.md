@@ -3,7 +3,7 @@ This project seeks to help the Princeton University COS Lab TA program track the
 
 ## Instructions
 To use, download the repository and create the following file:<br>
-<strong>auth.py</strong>
+<strong>api_auth.py</strong>
 <br><code>
 username = \<api-username\>
 <br>

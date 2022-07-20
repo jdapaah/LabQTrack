@@ -1,7 +1,7 @@
 from wsse.client.requests.auth import WSSEAuth
 import requests
 import statistics
-from auth import username, API_SECRET
+from api_auth import username, API_SECRET
 
 wsse_auth = WSSEAuth(username, API_SECRET)
 
