@@ -1,0 +1,91 @@
+<html>
+<!-- <div class=""> -->
+<nav class="navbar navbar-expand-lg navbar-light jumbotron orange-moon">
+	<div class="container-fluid">
+		<a class="navbar-brand forceMaven" id="HomeButton" href="/index">MealMatch</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#content">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse justify-content-end" id="content">
+			<ul class="forceMaven navbar-nav">
+				{% if session.get('username') == None or not user_profile.exists(auth.authenticate()) %}
+				<li class="nav-item"><a class="nav-link NB-Button" href="/about">About</a></li>
+				<li class="nav-item"><a class="nav-link NB-Button" href="/tutorial">Tutorial</a>
+				<li class="nav-item"><a class="nav-link NB-Button" href="/next">Log In</a></li>
+				{% else %}
+				<li class="nav-item"><a class="nav-link NB-Button" href="/">Home</a></li>
+				<li class="nav-item"><a class="nav-link NB-Button" href="/matches">Matches and Requests</a></li>
+				<li class="nav-item"><a class="nav-link NB-Button" href="/about">About</a></li>
+				<li class="nav-item"><a class="nav-link NB-Button" href="/tutorial">Tutorial</a></li>
+				<li class="nav-item"><a class="nav-link NB-Button" href="/logout">Sign Out</a></li>
+				{% endif %}
+			</ul>
+		</div>
+	</div>
+</nav>
+<!-- </div> -->
+<style>
+	.NB-Button {
+		font-weight: 300;
+		padding-top: 5px;
+		padding-bottom: 5px;
+		color: white !important;
+		text-decoration: none;
+		padding-left: 5px;
+		padding-right: 5px;
+	}
+
+	ul li.nav-item a {
+		list-style: none;
+		position: relative;
+		display: inline;
+	}
+
+	ul li.nav-item a {
+		color: #333;
+		text-decoration: none;
+	}
+
+	ul li.nav-item a:after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		bottom: -2px;
+		width: 0px;
+		height: 2px;
+		background: white;
+		transition: all 0.45s;
+	}
+
+	ul li.nav-item a:hover:after {
+		width: 100%;
+		left: 0;
+	}
+
+	ul li.nav-item a:hover {
+		text-decoration: none;
+	}
+
+	ul li.nav-item {
+		margin-top: 10px;
+	}
+
+	#HomeButton {
+		font-weight: 900;
+		color: white;
+		font-size: 32px;
+	}
+
+	.jumbotron {
+		background-color: #ff9f46;
+		color: white;
+		text-align: left;
+		font-size: 16px;
+		/* height: 70px; */
+		padding-left: 10px;
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+</style>
+
+</html>

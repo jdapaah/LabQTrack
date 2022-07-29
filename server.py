@@ -24,27 +24,19 @@ def landing_page():
     return response
     
 @app.route('/', methods=['GET'])
+@app.route('/index', methods=['GET'])
 def home_page():
-    if session.get('username'):
-        html = render_template('homescreen.html')
-        response = make_response(html)
-        return response
-    else:
+    if not session.get('username'):
         return redirect('/landing')
+    html = render_template('homescreen.html')
+    response = make_response(html)
+    return response
 
 @app.route('/next', methods=['GET'])
 def go_to_cas():
     auth.authenticate()
-    return redirect(url_for('homescreen'))
+    return redirect('/index')
 
-
-@app.route('/index', methods=['GET'])
-def homescreen():
-    if not session.get('username'):
-        return redirect('/landing')  # go to landing page
-    html = render_template('homescreen.html')
-    response = make_response(html)
-    return response
 
 @app.route('/active', methods=['GET'])
 def active_page():
