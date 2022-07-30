@@ -11,16 +11,19 @@
       </div>
    </div>
 </div>
+<div class="container-fluid" id="searchresults">
+   
+</div>
 <script>
    'use strict';
 
    function handleResponse(response) {
-      $('#content').html(response);
+      $('#searchresults').html(response);
    }
 
    let request = null;
 
-   function getResults(search_type) {
+   function getResults() {
       let name = $('#nameID').val();
       let netid = $('#netID').val();
       let year = $('#yearID').val();
@@ -29,7 +32,7 @@
       netid = encodeURIComponent(netid);
       year = encodeURIComponent(year);
 
-      let url = `/${search_type}?name=${name}&=netid=${netid}&year=${year}`;
+      let url = `/students?name=${name}&=netid=${netid}&year=${year}`;
 
       if (request != null)
          request.abort();
