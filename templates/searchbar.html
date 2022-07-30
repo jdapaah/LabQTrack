@@ -1,56 +1,61 @@
-<div class="row">
-    <div class="col-sm-4">
-        <input placeholder="Name" id="nameID" class="form-control" autofocus>
-    </div>
-    <div class="col-sm-4">
-        <input placeholder="Netid" id="netID" class="form-control">
-    </div>
-    <div class="col-sm-4">
-        <input placeholder="Class Year" id="yearID" class="form-control">
-    </div>
+<div class="container-fluid" style="background-color:#295078; color:white">
+   <div class="row">
+      <div class="col-sm-4">
+         <input placeholder="Name" id="nameID" class="form-control searchinput" autofocus>
+      </div>
+      <div class="col-sm-4">
+         <input placeholder="Netid" id="netID" class="form-control searchinput">
+      </div>
+      <div class="col-sm-4">
+         <input placeholder="Class Year" id="yearID" class="form-control searchinput">
+      </div>
+   </div>
 </div>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
-    'use strict';
-    
-    function handleResponse(response)
-     {
-        $('#content').html(response);
-     }
+   'use strict';
 
-     let request = null;
+   function handleResponse(response) {
+      $('#content').html(response);
+   }
 
-     function getResults()
-     {
-        let name = $('#nameID').val();
-        let netid = $('#netID').val();
-        let year = $('#yearID').val();
-        
-        name = encodeURIComponent(name);
-        netid = encodeURIComponent(netid);
-        year = encodeURIComponent(year);
+   let request = null;
 
-        let url = `/${}?name=${name}&=netid=${netid}&year=${year}`;
+   function getResults(search_type) {
+      let name = $('#nameID').val();
+      let netid = $('#netID').val();
+      let year = $('#yearID').val();
 
-        if (request != null)
-           request.abort();
+      name = encodeURIComponent(name);
+      netid = encodeURIComponent(netid);
+      year = encodeURIComponent(year);
 
-        request = $.ajax(
-           {
-              type: 'GET',
-              url: url,
-              success: handleResponse
-           }
-        );
-     }
+      let url = `/${search_type}?name=${name}&=netid=${netid}&year=${year}`;
 
-     function setup()
-     {
-        $('#nameID').on('input', getResults);
-        $('#netID').on('input', getResults);
-        $('#yearID').on('input', getResults);
-        getResults()
-     }
-     $('document').ready(setup);
+      if (request != null)
+         request.abort();
+
+      request = $.ajax(
+         {
+            type: 'GET',
+            url: url,
+            success: handleResponse
+         }
+      );
+   }
+
+   function setup() {
+      $('#nameID').on('input', getResults);
+      $('#netID').on('input', getResults);
+      $('#yearID').on('input', getResults);
+      getResults()
+   }
+   $('document').ready(setup);
 </script>
+<style>
+   .searchinput {
+      padding-top: 5px;
+      padding-bottom: 15px;
+      padding-left: 5px;
+      padding-right: 5px;
+   }
+</style>

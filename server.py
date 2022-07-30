@@ -17,17 +17,12 @@ app = Flask(__name__)
 app.secret_key = os.urandom(16)
 
 
-@app.route('/landing', methods=['GET'])
-def landing_page():
-    html = render_template('landing.html')
-    response = make_response(html)
-    return response
-    
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET'])
 def home_page():
     if not session.get('username'):
-        return redirect('/landing')
+        auth.authenticate()
+        return redirect('/index')
     html = render_template('homescreen.html')
     response = make_response(html)
     return response
@@ -57,6 +52,20 @@ def shift_page():
     html = render_template('shift.html')
     response = make_response(html)
     return response
+
+@app.route('/logout', methods=['GET'])
+def logout_route():
+    auth.logout()
+
+@app.route('/about', methods=['GET'])
+def about_page():
+    html = render_template('about.html')
+    return make_response(html)
+
+@app.route('/tutorial', methods=['GET'])
+def tutorial_page():
+    html = render_template('tutorial.html')
+    return make_response(html)
 
 
 if __name__ == "__main__":

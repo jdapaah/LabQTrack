@@ -96,5 +96,5 @@ def logout():
 
     # Logout, and redirect the browser to the index page.
     logout_url = (_CAS_URL + 'logout?service='
-                  + quote(sub('logout', 'landing', request.url)))
+                  + quote(sub('logout', 'index', request.url)))
     abort(redirect(logout_url))
