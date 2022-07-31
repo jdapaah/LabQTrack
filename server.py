@@ -3,23 +3,37 @@ from sys import stdout, stderr
 from datetime import date, datetime, tzinfo
 from argparse import ArgumentParser
 import os
-from urllib import response
 
 from dateutil import parser
 from flask import Flask, session, request
 from flask import render_template, make_response, redirect
 from flask_talisman import Talisman
+from wsse.client.requests.auth import WSSEAuth
+import requests
 
 import auth
-from wsse.client.requests.auth import WSSEAuth
 from api_auth import username, API_SECRET
-wsse_auth = WSSEAuth(username, API_SECRET)
-
-from api_search import student_search
+from roster import student_search
 
 app = Flask(__name__)
 app.secret_key = os.urandom(16)
 selected_students = {}
+
+# the full roster of the students, saved to speed up search process
+full_roster = []
+
+
+def fill_roster():
+    ret = []
+    roster_url = "https://www.labqueue.io/api/v1/queues/intro-cs-lab/roster/"
+    while roster_url:
+        result = requests.get(url=roster_url,
+                              auth=WSSEAuth(username, API_SECRET))
+        full_dict = result.json()
+        ret += full_dict['results']
+        roster_url = full_dict['next']
+    print(len(ret))
+    return ret
 
 
 @app.route('/', methods=['GET'])
@@ -47,12 +61,16 @@ def search_students():
     year = request.args.get('year')
     # alr = request.args.get(alr)
 
-    students = student_search(netid, name, year, wsse_auth)
-    # students = {key: val for key,val in students.items() if key not in alr} # only list students that aren't in the list already
-    html = "<u id='resultsList>"
-    for i in students:
-        html += "<li>{} ({})</li>".format(students[i], i)
-    html += "</li>"
+    students = student_search(netid, name, year, full_roster)
+    # students = {key: val for key,val in students.items() if key not in selected_students} # only list students that aren't in the list already
+    html = ""
+    if students:
+        print(students)
+        html = "<ul>"
+        for i in students:
+            html += "<li class='searchresult' id={}_SR>{} ({})</li>\n".format(
+                i, students[i], i)
+        html += "</ul>"
     response = make_response(html)
     return response
 
@@ -102,7 +120,7 @@ if __name__ == "__main__":
     )
     args = arg_parser.parse_args()
     host = args.host
-    print('host: ', args.host, file=stdout)
+    print('host:', host, file=stdout)
 
     try:
         # redirect to HTTPS when on heroku, don't use security protocol on localhost
@@ -113,6 +131,8 @@ if __name__ == "__main__":
             print('running local host, no talisman security', file=stdout)
 
         port = int(os.environ.get('PORT', 5001))
+        full_roster = fill_roster()
+
         app.run(host=host, port=port, debug=False)
     except Exception as ex:
         print(ex, file=stderr)

@@ -7,13 +7,18 @@
          <input placeholder="Netid" id="netID" class="form-control searchinput">
       </div>
       <div class="col-sm-4">
-         <input placeholder="Class Year" id="yearID" class="form-control searchinput">
+         <select class="form-select" id="yearID" name="year" required>
+            <option selected value="-1">Class Year</option>
+            {% set senior_class = 2023 %}
+            {%for i in range(4)%}
+            <option value="{{senior_class+i}}">{{senior_class+i}}</option>
+            {%endfor%}
+            <option value="0">Faculty</option>
+         </select>
       </div>
    </div>
 </div>
-<div class="container-fluid" id="searchresults">
-   
-</div>
+<div class="container-fluid" id="searchresults"></div>
 <script>
    'use strict';
 
@@ -32,7 +37,7 @@
       netid = encodeURIComponent(netid);
       year = encodeURIComponent(year);
 
-      let url = `/students?name=${name}&=netid=${netid}&year=${year}`;
+      let url = `/students?name=${name}&netid=${netid}&year=${year}`;
 
       if (request != null)
          request.abort();
@@ -60,5 +65,13 @@
       padding-bottom: 15px;
       padding-left: 5px;
       padding-right: 5px;
+   }
+
+   .searchresult:hover {
+      background-color: #ffffff;
+   }
+
+   .searchresult:hover {
+      background-color: #a1a4a4;
    }
 </style>
