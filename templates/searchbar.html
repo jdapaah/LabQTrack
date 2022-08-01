@@ -7,68 +7,28 @@
          <input placeholder="Netid" id="netID" class="form-control searchinput">
       </div>
       <div class="col-sm-4">
-         <select class="form-select" id="yearID" name="year" required>
+         <select class="form-select searchinput" id="yearID" name="year">
+            <!-- <option selected disabled hidden value="-1">Class Year</option> -->
             <option selected value="-1">Class Year</option>
             {% set senior_class = 2023 %}
             {%for i in range(4)%}
             <option value="{{senior_class+i}}">{{senior_class+i}}</option>
             {%endfor%}
-            <option value="0">Faculty</option>
+            <option value="2000">Faculty</option>
          </select>
       </div>
    </div>
 </div>
 <div class="container-fluid" id="searchresults"></div>
-<script>
-   'use strict';
-
-   function handleResponse(response) {
-      $('#searchresults').html(response);
-   }
-
-   let request = null;
-
-   function getResults() {
-      let name = $('#nameID').val();
-      let netid = $('#netID').val();
-      let year = $('#yearID').val();
-
-      name = encodeURIComponent(name);
-      netid = encodeURIComponent(netid);
-      year = encodeURIComponent(year);
-
-      let url = `/students?name=${name}&netid=${netid}&year=${year}`;
-
-      if (request != null)
-         request.abort();
-
-      request = $.ajax(
-         {
-            type: 'GET',
-            url: url,
-            success: handleResponse
-         }
-      );
-   }
-
-   function setup() {
-      $('#nameID').on('input', getResults);
-      $('#netID').on('input', getResults);
-      $('#yearID').on('input', getResults);
-      getResults()
-   }
-   $('document').ready(setup);
-</script>
+<br><hr></hr>
+<div class="container-fluid" id="selectedStudents"></div>
+<script src="../static/searchbar.js"></script>
 <style>
    .searchinput {
       padding-top: 5px;
       padding-bottom: 15px;
       padding-left: 5px;
       padding-right: 5px;
-   }
-
-   .searchresult:hover {
-      background-color: #ffffff;
    }
 
    .searchresult:hover {
