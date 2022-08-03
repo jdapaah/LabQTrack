@@ -1,10 +1,9 @@
 ##
 from sys import stdout, stderr
-from datetime import date, datetime, tzinfo
+from datetime import date, datetime as dt, tzinfo
 from argparse import ArgumentParser
 import os
 
-from dateutil import parser
 from flask import Flask, session, request
 from flask import render_template, make_response, redirect
 from flask_talisman import Talisman
@@ -14,29 +13,16 @@ import requests
 import auth
 from api_auth import username, API_SECRET
 from roster import student_search
+# from shift_search import shift
+# from period_search import period
 
 app = Flask(__name__)
 app.secret_key = os.urandom(16)
+wsse_auth = WSSEAuth(username, API_SECRET)
 selected_students = {}
 
 # the full roster of the students, saved to speed up search process
 full_roster = {}
-
-
-def fill_roster():
-    ret = {}
-    roster_url = "https://www.labqueue.io/api/v1/queues/intro-cs-lab/roster/"
-    while roster_url:
-        result = requests.get(url=roster_url,
-                              auth=WSSEAuth(username, API_SECRET))
-        full_dict = result.json()
-        for d in full_dict['results']:
-            # some faculty grad_year values (cmorretti) are null instead of 0
-            d['grad_year'] = d['grad_year'] if d['grad_year'] != None else 0
-            ret[d['netid']] = {'name': d['full_name'],
-                               'year': d['grad_year'] % 100 + 2000}  # some grad_year_values are 24 vs 2024
-        roster_url = full_dict['next']
-    return ret
 
 
 @app.route('/', methods=['GET'])
@@ -44,15 +30,53 @@ def fill_roster():
 def home_page():
     if not session.get('username'):
         return redirect('/next')
-    html = render_template('homescreen.html')
+    html = render_template('homescreen.html',
+                           active={})
     response = make_response(html)
     return response
 
 
-@app.route('/next', methods=['GET'])
-def go_to_cas():
-    auth.authenticate()
-    return redirect('/index')
+# JS route for adding/removing students to the selected list
+def update_student():
+    # TODO selected_students from client side
+    html = ""
+    if selected_students:
+        html += '<h4>Selected Students</h4>\n'
+        for i in selected_students:
+            html += "<button class='selected' value={}><span>{} ({})</span></button>\n".format(
+                    i, selected_students[i]['name'], i)
+        html += \
+            """
+    <script>
+    $('.selected').click(removeStudent)
+    </script>
+    """
+    response = make_response(html)
+    return response
+
+
+@app.route('/addstudent', methods=['POST'])
+def add_student():
+    global selected_students
+    netid = request.args.get('netid')
+    selected_students[netid] = full_roster[netid]
+    return update_student()
+
+
+@app.route('/removestudent', methods=['POST'])
+def remove_student():
+    global selected_students
+    netid = request.args.get('netid')
+    selected_students.pop(netid)
+    return update_student()
+
+
+@app.route('/updatemetrics', methods=['GET'])
+def update_metrics():
+    html = render_template('metrics.html',
+                           active=active())
+    response = make_response(html)
+    return response
 
 
 # JS route for updating search list of students
@@ -69,11 +93,6 @@ def search_students():
                 if key not in selected_students}
     html = ""
     if code == 0:  # success
-        # html += "<ul>"
-        # for i in students:
-        # html += "<li class='searchresult' value={}><span>{} ({})</span></li>\n".format(
-        # i, students[i], i)
-        # html += "</ul>"
         for i in students:
             html += "<button class='searchresult' value={}><span>{} ({})</span></button>\n".format(
                 i, students[i], i)
@@ -82,71 +101,19 @@ def search_students():
         <script>
         $('.searchresult').click(addStudent)
         </script>
-        """ # add javascript
+        """  # add javascript
     elif code == 1:  # success, but too many results
         html += "<em>Too many results, try narrowing your search</em>"
-    elif code == 2: # empty result
+    elif code == 2:  # empty result
         pass
     response = make_response(html)
     return response
 
-# JS route for adding students to the selected list
 
-
-def update_student():
-    # TODO selected_students from client side
-    html = ""
-    if selected_students:
-        html += '<h4>Selected Students</h4>\n'
-        for i in selected_students:
-            html += "<button class='selected' value={}><span>{} ({})</span></button>\n".format(
-                    i, selected_students[i], i)
-        html += \
-            """
-    <script>
-    $('.selected').click(removeStudent)
-    </script>
-    """
-
-    response = make_response(html)
-    return response
-
-
-@app.route('/addstudent', methods=['POST'])
-def add_student():
-    global selected_students
-    netid = request.args.get('netid')
-    selected_students[netid] = full_roster[netid]['name']
-    return update_student()
-
-
-@app.route('/removestudent', methods=['POST'])
-def remove_student():
-    global selected_students
-    netid = request.args.get('netid')
-    selected_students.pop(netid)
-    return update_student()
-
-
-# @app.route('/active', methods=['GET'])
-# def active_page():
-#     html = render_template('active.html')
-#     response = make_response(html)
-#     return response
-
-
-# @app.route('/period', methods=['GET'])
-# def period_page():
-#     html = render_template('period.html')
-#     response = make_response(html)
-#     return response
-
-
-# @app.route('/shift', methods=['GET'])
-# def shift_page():
-#     html = render_template('shift.html')
-#     response = make_response(html)
-#     return response
+@app.route('/next', methods=['GET'])
+def go_to_cas():
+    auth.authenticate()
+    return redirect('/index')
 
 
 @app.route('/logout', methods=['GET'])
@@ -158,6 +125,50 @@ def logout_route():
 def about_page():
     html = render_template('about.html')
     return make_response(html)
+
+
+def active():
+    ret = {}
+    for netid in selected_students:
+        format_str = "%Y-%m-%dT%H:%M"
+        url = "https://www.labqueue.io/api/v1/requests/query/"
+
+        payload = {
+            # "is_open": "true",
+            'open_at_time': '2021-11-03T20:02',
+            "accepted_by": netid
+        }
+        sess = requests.get(url=url,
+                            auth=wsse_auth,
+                            params=payload).json()['results']
+        if not sess:  # not in queue
+            continue
+        sess = sess[0]
+        ta = dt.strptime(sess['time_accepted'], format_str)
+
+        ret[netid] = "{} started current session with {} at {}, has been working for {} minutes.".format(
+            "{} ({})".format(full_roster[netid]['name'], netid),
+            "{} ({})".format(sess['author_full_name'], sess['author_netid']),
+            sess['time_accepted'][-5:],
+            (dt.now() - ta).seconds // 60
+        )
+    return ret
+
+
+def fill_roster():
+    ret = {}
+    roster_url = "https://www.labqueue.io/api/v1/queues/intro-cs-lab/roster/"
+    while roster_url:
+        result = requests.get(url=roster_url,
+                              auth=wsse_auth)
+        full_dict = result.json()
+        for d in full_dict['results']:
+            # some faculty grad_year values (cmorretti) are null instead of 0
+            d['grad_year'] = d['grad_year'] if d['grad_year'] != None else 0
+            ret[d['netid']] = {'name': d['full_name'],
+                               'year': d['grad_year'] % 100 + 2000}  # some grad_year_values are 24 vs 2024
+        roster_url = full_dict['next']
+    return ret
 
 
 if __name__ == "__main__":

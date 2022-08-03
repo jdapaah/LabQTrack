@@ -9,29 +9,7 @@
 <body>
     {% include 'header.html' %}
     {% include 'searchbar.html' %}
-    <h2>
-        <a href="/active">Active Search</a>
-    </h2>
-    <p>
-        Check if user X is currently in the queue, who they are working with,
-        and how long they have been working with that person.
-    </p>
-    {% include 'active.html' %}
-    <h2>
-        <a href="/period">Period Search</a>
-    </h2>
-    <p>
-        Over the provided time period, check what days user X has
-        attended the queue, and print out which students they spent too much time on
-    </p>
-    {% include 'period.html' %}
-    <h2>
-        <a href="/shift">Shift Search</a>
-    </h2>
-    <p>
-        Check for a specific shift, if user X is contributing enough. Precisiely,
-        determine if any Lab_TA are less than 1 std below the mean number of students helped per TA
-    </p>
-    {% include 'shift.html' %}
+    {% include 'metrics.html' %}
+    {% include 'footer.html' %}
 </body>
 </html>

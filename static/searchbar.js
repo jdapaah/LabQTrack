@@ -5,38 +5,52 @@ function searchResultResponse(response) {
 }
 function updateSelectedResponse(response) {
    $('#selectedStudents').html(response)
-   getResults()
+   updateMetrics()
 }
-
+function updateMetricsResponse(response){
+   $('#metrics').html(response)
+   getSearchResults()
+}
 function addStudent() {
-    // TODO
-    let netid = $(this).val()
-    let url = `/addstudent?netid=${netid}`
-    updateStudent(url);
+   // TODO
+   let netid = $(this).val()
+   let url = `/addstudent?netid=${netid}`
+   updateStudent(url);
 }
 function removeStudent() {
-    // TODO
-    let netid = $(this).val()
-    let url = `/removestudent?netid=${netid}`
-    updateStudent(url);
+   // TODO
+   let netid = $(this).val()
+   let url = `/removestudent?netid=${netid}`
+   updateStudent(url);
 }
 
 let request = null;
 
-function updateStudent(url) { 
-    if (request != null)
-       request.abort();
- 
-    request = $.ajax(
-       {
-          type: 'POST',
-          url: url,
-          success: updateSelectedResponse
-       }
-    );
- }
+function updateStudent(url) {
+   if (request != null)
+      request.abort();
 
-function getResults() {
+   request = $.ajax(
+      {
+         type: 'POST',
+         url: url,
+         success: updateSelectedResponse
+      }
+   );
+}
+function updateMetrics() {
+   if (request != null)
+      request.abort();
+
+   request = $.ajax(
+      {
+         type: 'GET',
+         url: '/updatemetrics',
+         success: updateMetricsResponse
+      }
+   );
+}
+function getSearchResults() {
    let name = $('#nameID').val();
    let netid = $('#netID').val();
    let year = $('#yearID').val();
@@ -60,8 +74,8 @@ function getResults() {
 }
 
 function setup() {
-   $('#nameID').on('input', getResults);
-   $('#netID').on('input', getResults);
-   $('#yearID').on('input', getResults);
+   $('#nameID').on('input', getSearchResults);
+   $('#netID').on('input', getSearchResults);
+   $('#yearID').on('input', getSearchResults);
 }
 $('document').ready(setup);

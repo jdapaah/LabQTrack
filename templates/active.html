@@ -1,1 +1,20 @@
-Active
+<div id="activeHeader">
+    <h2>
+        Active Search
+    </h2>
+    <p>
+        Check if user X is currently in the queue, whom they are working with,
+        and how long they have been working with that person.
+    </p>
+</div>
+<div id='activeBody' class="container-fluid">
+    {% for netid, info in active.items() %}
+    <div class="card">
+        <div class='row align-content-center'>
+            <div class="card-body col-sm-9">
+                {{ info }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
