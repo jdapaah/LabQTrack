@@ -31,7 +31,9 @@ def home_page():
     if not session.get('username'):
         return redirect('/next')
     html = render_template('homescreen.html',
-                           active={})
+                           active={},
+                           period={},
+                           shift={})
     response = make_response(html)
     return response
 
@@ -74,7 +76,9 @@ def remove_student():
 @app.route('/updatemetrics', methods=['GET'])
 def update_metrics():
     html = render_template('metrics.html',
-                           active=active())
+                           active=active(),
+                           period=period(),
+                           shift=shift())
     response = make_response(html)
     return response
 
@@ -126,16 +130,24 @@ def about_page():
     html = render_template('about.html')
     return make_response(html)
 
-
+def period():
+    return {}
+def shift():
+    return {}
 def active():
     ret = {}
     for netid in selected_students:
         format_str = "%Y-%m-%dT%H:%M"
         url = "https://www.labqueue.io/api/v1/requests/query/"
 
+        # current_time_obj = dt.now()
+        # current_time_str = current_time_obj.strftime(format_str)
+        current_time_str = '2021-11-03T20:21'
+        current_time_obj = dt.strptime(current_time_str, format_str)
         payload = {
             # "is_open": "true",
-            'open_at_time': '2021-11-03T20:02',
+            'open_at_time': current_time_str,
+            'accepted_before': current_time_str,
             "accepted_by": netid
         }
         sess = requests.get(url=url,
@@ -150,7 +162,7 @@ def active():
             "{} ({})".format(full_roster[netid]['name'], netid),
             "{} ({})".format(sess['author_full_name'], sess['author_netid']),
             sess['time_accepted'][-5:],
-            (dt.now() - ta).seconds // 60
+            (current_time_obj - ta).seconds // 60
         )
     return ret
 
