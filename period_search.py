@@ -13,23 +13,14 @@ attended the queue, and print out which students they spent too much time on
 """
 
 
-def main():
-    parser = ArgumentParser(
-        "Check the current attendance, and \nhow long they're been working with the current student")
-    parser.add_argument("--netid", "-t", nargs='+', type=str, default=[], help='Search by NetID substring')
-    parser.add_argument("--name", "-n", nargs='+', type=str, default=[], help='Search by name substring')
+def period():
     parser.add_argument("--start", "-s", nargs="?", help="Start time as 4 digits, MMDD")
     parser.add_argument("--end", "-e", nargs="?", help="End time as 4 digits, MMDD, defualt is today")
-    args = parser.parse_args()
     netid_subs = args.netid
     if not args.end:
-        end_day =
+        end_day = datetime.now()
     print(args.netid, args.name, args.start, args.end)
-    exit(0)
     name_subs = [s.lower() for s in args.name]
-    if not (name_subs or netid_subs):
-        print("Needs at least one argument", file=stderr)
-        exit(1)
     start_day, end_day = "2022-02-14T00:00", "2022-03-01T00:00"
     url = "https://www.labqueue.io/api/v1/queues/intro-cs-lab/roster/"
     flagged_users = []
@@ -37,17 +28,6 @@ def main():
         result = requests.get(url, auth=wsse_auth)
         d: dict = result.json()
         for student in d['results']:
-            # check that not professor
-            if not student['grad_year']:
-                continue
-            # search ta name
-            if name_subs and any(ns in student['full_name'].lower() for ns in name_subs):
-                pass
-            # search ta netid
-            elif netid_subs and any(ns in student['netid'] for ns in netid_subs):
-                pass
-            else:
-                continue
             stats = good_attendance(student['netid'], start_day, end_day)
             if any(stats):
                 flagged_users.append((student['full_name'], student['netid'], stats))
@@ -112,11 +92,10 @@ def good_attendance(netid, start_str, end_str):
         # does NOT ACCOUNT FOR 4-HOURS SHIFTS
     print('bcc', bad_cases_count)
     print('Attended %d days in the %d week period' % (len(count), (end_day - start_day).days // 7))
-    return missed_days > (end_day - start_day).days // 7, bad_cases_count >= max_acceptable
+    # return missed_days > (end_day - start_day).days // 7, bad_cases_count >= max_acceptable
+    ret['days_in_attendance']: int
+    ret['all_students']: [] 
+    ret['all_students'][day][i] : {'start_time':str, 'end_time': str, 'length': int, 'over': bool, 'student_info': str}
     # if count < min_acceptable:
     #     bad_cases_count += 1
     #     print('assuming one two-hour shift, not helping enough people (should be at least %d)' % min_acceptable)
-
-
-if __name__ == '__main__':
-    main()
