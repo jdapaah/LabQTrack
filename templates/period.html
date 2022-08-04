@@ -7,4 +7,20 @@
         attended the queue, and print out which students they spent too much time on
     </p>
 </div>
-<div id="periodBody"></div>
+<div id="periodBody">
+    <input type="date">
+    <input type="date">
+
+    {% for netid, netiddata in period.items() %}
+    <div class="card col-sm-4">
+        <div class='row align-content-center'>
+            <div class="card-body">
+                {{ netiddata['days']|length }} days in the queue
+                Went over with {{ netiddata['students_over']}} students
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script src="./static/periodupdate.js"></script>
