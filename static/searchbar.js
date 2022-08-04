@@ -8,7 +8,7 @@ function updateSelectedResponse(response) {
    updateMetrics()
 }
 function updateMetricsResponse(response){
-   $('#metrics').html(response)
+   $('#metricsWrapper').html(response)
    getSearchResults()
 }
 function addStudent() {

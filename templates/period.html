@@ -8,8 +8,8 @@
     </p>
 </div>
 <div id="periodBody">
-    <input type="date">
-    <input type="date">
+    <input id="startInput" type="date">
+    <input id="endInput" type="date">
 
     {% for netid, netiddata in period.items() %}
     <div class="card col-sm-4">
@@ -23,4 +23,38 @@
     {% endfor %}
 </div>
 
-<script src="./static/periodupdate.js"></script>
+<script>
+    'use strict';
+
+    function updatePeriodResponse(response) {
+        $('#periodWrapper').html(response)
+    }
+
+    var request = null;
+
+    function updatePeriod() {
+        let start = $('#startInput').val();
+        let end = $('#endInput').val()
+        start = encodeURIComponent(start);
+        end = encodeURIComponent(end);
+
+        if (request != null)
+            request.abort();
+
+        request = $.ajax(
+            {
+                type: 'GET',
+                url: `/updateperiod?start=${start}&end=${end}`,
+                success: updatePeriodResponse
+            }
+        );
+    }
+
+    function setup() {
+        $('#startInput').on('change', function(){
+            console.log('inputed')
+        });
+        $('#endInput').on('change', updatePeriod);
+    }
+    $('document').ready(setup);
+</script>

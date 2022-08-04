@@ -1,6 +1,6 @@
 ##
 from sys import stdout, stderr
-from datetime import datetime
+from datetime import datetime, timedelta
 from argparse import ArgumentParser
 import os
 
@@ -18,7 +18,9 @@ from roster import student_search
 app = Flask(__name__)
 app.secret_key = os.urandom(16)
 wsse_auth = WSSEAuth(username, API_SECRET)
-TIME_FORMAT_STR = "%Y-%m-%dT%H:%M"
+DATE_TIME_FORMAT_STR = "%Y-%m-%dT%H:%M"
+TIME_FORMAT_STR = "%H:%M"
+DATE_FORMAT_STR = "%Y-%m-%d"
 
 selected_students = {}
 # the full roster of the students, saved to speed up search process
@@ -75,29 +77,30 @@ def remove_student():
 
 @app.route('/updatemetrics', methods=['GET'])
 def update_metrics():
-    start_str = request.args.get('start_time')
-    end_str = request.args.get('end_time')
-    print(start_str)
     html = render_template('metrics.html',
                            active=active(),
-                           period=period(start_str, end_str),
+                           period={},
+                        #    period=period(*time_format(
+                        #        request.args.get('start'),
+                        #        request.args.get('end'))),
                            shift=shift())
     response = make_response(html)
     return response
 
 
-@app.route('/updateperiod', methods=['GET'])
+@ app.route('/updateperiod', methods=['GET'])
 def update_period():
-    start_str = request.args.get('start')
-    end_str = request.args.get('end')
-    print(start_str)
     html = render_template('period.html',
-                           period=period(start_str, end_str))
+                           period=period(*time_format(
+                               request.args.get('start'),
+                               request.args.get('end'))))
     response = make_response(html)
     return response
 
 # JS route for updating search list of students
-@app.route('/students', methods=['GET'])
+
+
+@ app.route('/students', methods=['GET'])
 def search_students():
     netid = request.args.get('netid')
     name = request.args.get('name')
@@ -143,23 +146,24 @@ def about_page():
     html = render_template('about.html')
     return make_response(html)
 
+
 def period(start_str, end_str):
     ret = {}
     for netid in selected_students:
         url = "https://www.labqueue.io/api/v1/requests/query/"
         payload = {"is_open": "false",
-                "created_after": start_str,
-                "created_before": end_str,
-                "accepted_by": netid,
-                "page": 1
-                }
-        student_ret = {'days':{}, 'students_over':0}
+                   "created_after": start_str,
+                   "created_before": end_str,
+                   "accepted_by": netid,
+                   "page": 1
+                   }
+        student_ret = {'days': {}, 'students_over': 0}
         while url:
             json = requests.get(url, auth=wsse_auth, params=payload).json()
             results = json['results']
             for sess in results:
-                tc = datetime.strptime(sess['time_closed'], TIME_FORMAT_STR)
-                ta = datetime.strptime(sess['time_accepted'], TIME_FORMAT_STR)
+                tc = datetime.strptime(sess['time_closed'], DATE_TIME_FORMAT_STR)
+                ta = datetime.strptime(sess['time_accepted'], DATE_TIME_FORMAT_STR)
                 length = (tc - ta).seconds // 60
                 if length < 5:
                     continue
@@ -179,8 +183,11 @@ def period(start_str, end_str):
 
     return ret
 
+
 def shift():
     return {}
+
+
 def active():
     ret = {}
     for netid in selected_students:
@@ -189,7 +196,7 @@ def active():
         # current_time_obj = dt.now()
         # current_time_str = current_time_obj.strftime(TIME_FORMAT_STR)
         current_time_str = '2021-11-03T20:21'
-        current_time_obj = datetime.strptime(current_time_str, TIME_FORMAT_STR)
+        current_time_obj = datetime.strptime(current_time_str, DATE_TIME_FORMAT_STR)
         payload = {
             # "is_open": "true",
             'open_at_time': current_time_str,
@@ -202,7 +209,7 @@ def active():
         if not sess:  # not in queue
             continue
         sess = sess[0]
-        ta = datetime.strptime(sess['time_accepted'], TIME_FORMAT_STR)
+        ta = datetime.strptime(sess['time_accepted'], DATE_TIME_FORMAT_STR)
 
         ret[netid] = "{} started current session with {} at {}, has been working for {} minutes.".format(
             "{} ({})".format(full_roster[netid]['name'], netid),
@@ -211,6 +218,15 @@ def active():
             (current_time_obj - ta).seconds // 60
         )
     return ret
+
+
+def time_format(start_str_short, end_str_short):
+    start_str = datetime.strptime(start_str_short, DATE_FORMAT_STR)\
+        .strftime(DATE_TIME_FORMAT_STR)
+    end_time = datetime.strptime(end_str_short, DATE_FORMAT_STR)\
+        + timedelta(days=1)
+    end_str = end_time.strftime(DATE_TIME_FORMAT_STR)
+    return start_str, end_str
 
 
 def fill_roster():
