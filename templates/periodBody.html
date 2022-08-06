@@ -1,0 +1,38 @@
+{% for netid, netiddata in period.items() %}
+<div class="card col-sm-4" data-bs-toggle="modal" data-bs-target="#Popup_{{netid}}">
+    <h5>{{netid['name']}}</h5>
+    <div class='row align-content-center'>
+        <div class="card-body">
+            {{ netiddata['days']|length }} days in the queue
+            Went over with {{ netiddata['students_over']}} students
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="Popup_{{netid}}" tabindex="-1" aria-labelledby="PopupLabel_{{netid}}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="PopupLabel_{{netid}}">{{netiddata['name']}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% for day_str, day_list in netiddata['days'].items() %}
+                <div class="card">
+                    <h5>{{day_str}}</h5>
+                    <div class='row align-content-center'>
+                        <div class="card-body">
+                            {% for session in day_list %}
+                            <span class="{{session['colorclass']}}">{{session['start_time']}} -
+                                {{session['end_time']}}
+                                ({{session['length']}} minutes):
+                                {{session['student_info']}}<br></span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}

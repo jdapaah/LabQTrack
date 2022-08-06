@@ -11,22 +11,25 @@ function updateMetricsResponse(response){
    $('#metricsWrapper').html(response)
    getSearchResults()
 }
+
 function addStudent() {
-   // TODO
-   let netid = $(this).val()
-   let url = `/addstudent?netid=${netid}`
-   updateStudent(url);
+   let baseurl = '/addstudent'
+   let netid = $(this).val();
+   netid = encodeURIComponent(netid);
+   updateStudent(baseurl, netid);
 }
 function removeStudent() {
-   // TODO
-   let netid = $(this).val()
-   let url = `/removestudent?netid=${netid}`
-   updateStudent(url);
+   let baseurl = '/removestudent';
+   let netid = $(this).val();
+   netid = encodeURIComponent(netid);
+   updateStudent(baseurl, netid);
 }
 
 let request = null;
 
-function updateStudent(url) {
+function updateStudent(baseurl, netid) {
+   let url = baseurl + `?netid=${netid}`
+   console.log(url)
    if (request != null)
       request.abort();
 

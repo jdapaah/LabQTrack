@@ -77,12 +77,15 @@ def remove_student():
 
 @app.route('/updatemetrics', methods=['GET'])
 def update_metrics():
+    pst = request.args.get('start')
+    pet = request.args.get('end')
+    if pst and pet:
+        period = period(*time_format(pst, pet))
+    else:
+        period = {}
     html = render_template('metrics.html',
                            active=active(),
-                           period={},
-                        #    period=period(*time_format(
-                        #        request.args.get('start'),
-                        #        request.args.get('end'))),
+                           period=period,
                            shift=shift())
     response = make_response(html)
     return response
@@ -90,10 +93,14 @@ def update_metrics():
 
 @ app.route('/updateperiod', methods=['GET'])
 def update_period():
-    html = render_template('period.html',
-                           period=period(*time_format(
-                               request.args.get('start'),
-                               request.args.get('end'))))
+    pst = request.args.get('pst')
+    pet = request.args.get('pet')
+    if pst and pet:
+        periodVar = period(*time_format(pst, pet))
+    else:
+        periodVar = {}
+    html = render_template('periodBody.html',
+                           period=periodVar)
     response = make_response(html)
     return response
 
@@ -157,13 +164,16 @@ def period(start_str, end_str):
                    "accepted_by": netid,
                    "page": 1
                    }
-        student_ret = {'days': {}, 'students_over': 0}
+        student_ret = {'days': {}, 'students_over': 0,
+                       'name': full_roster[netid]['name']}
         while url:
             json = requests.get(url, auth=wsse_auth, params=payload).json()
             results = json['results']
             for sess in results:
-                tc = datetime.strptime(sess['time_closed'], DATE_TIME_FORMAT_STR)
-                ta = datetime.strptime(sess['time_accepted'], DATE_TIME_FORMAT_STR)
+                tc = datetime.strptime(
+                    sess['time_closed'], DATE_TIME_FORMAT_STR)
+                ta = datetime.strptime(
+                    sess['time_accepted'], DATE_TIME_FORMAT_STR)
                 length = (tc - ta).seconds // 60
                 if length < 5:
                     continue
@@ -173,11 +183,11 @@ def period(start_str, end_str):
                 student_ret['days'][day].append({
                     'start_time': sess['time_accepted'][-5:],
                     'end_time': sess['time_closed'][-5:],
-                    'minutes': length,
-                    'over': length > 25,
+                    'length': length,
+                    'colorclass': ['notoverclass', 'overclass'][length > 25],
                     'student_info': "{} ({})".format(sess['author_full_name'], sess['course'][-3:])
                 })
-                student_ret['students_over'] += student_ret['days'][day][-1]['over']
+                student_ret['students_over'] += student_ret['days'][day][-1] =='overclass'
             url = json['next']
         ret[netid] = student_ret
 
@@ -196,7 +206,8 @@ def active():
         # current_time_obj = dt.now()
         # current_time_str = current_time_obj.strftime(TIME_FORMAT_STR)
         current_time_str = '2021-11-03T20:21'
-        current_time_obj = datetime.strptime(current_time_str, DATE_TIME_FORMAT_STR)
+        current_time_obj = datetime.strptime(
+            current_time_str, DATE_TIME_FORMAT_STR)
         payload = {
             # "is_open": "true",
             'open_at_time': current_time_str,

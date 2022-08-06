@@ -8,21 +8,19 @@
     </p>
 </div>
 <div id="periodBody">
-    <input id="startInput" type="date">
-    <input id="endInput" type="date">
-
-    {% for netid, netiddata in period.items() %}
-    <div class="card col-sm-4">
-        <div class='row align-content-center'>
-            <div class="card-body">
-                {{ netiddata['days']|length }} days in the queue
-                Went over with {{ netiddata['students_over']}} students
-            </div>
-        </div>
-    </div>
-    {% endfor %}
+    <input id="startInput" type="date" value="{{pst}}">
+    <input id="endInput" type="date" value="{{pet}}">
+    <div id='periodWrapper'></div>
 </div>
+<style>
+    .overclass {
+        color: rgb(224, 31, 31);
+    }
 
+    .notoverclass {
+        color: rgb(32, 208, 32);
+    }
+</style>
 <script>
     'use strict';
 
@@ -30,7 +28,7 @@
         $('#periodWrapper').html(response)
     }
 
-    var request = null;
+    var requestPeriod = null;
 
     function updatePeriod() {
         let start = $('#startInput').val();
@@ -38,23 +36,21 @@
         start = encodeURIComponent(start);
         end = encodeURIComponent(end);
 
-        if (request != null)
-            request.abort();
+        if (requestPeriod != null)
+            requestPeriod.abort();
 
-        request = $.ajax(
+        requestPeriod = $.ajax(
             {
                 type: 'GET',
-                url: `/updateperiod?start=${start}&end=${end}`,
+                url: `/updateperiod?pst=${start}&pet=${end}`,
                 success: updatePeriodResponse
             }
         );
     }
 
-    function setup() {
-        $('#startInput').on('change', function(){
-            console.log('inputed')
-        });
+    function setupPeriodWindow() {
+        $('#startInput').on('change', updatePeriod);
         $('#endInput').on('change', updatePeriod);
     }
-    $('document').ready(setup);
+    $('document').ready(setupPeriodWindow);
 </script>
