@@ -1,9 +1,10 @@
 {% for netid, netiddata in period.items() %}
 <div class="card col-sm-4" data-bs-toggle="modal" data-bs-target="#Popup_{{netid}}">
-    <h5>{{netid['name']}}</h5>
+    <h5>{{netiddata['name']}}</h5>
     <div class='row align-content-center'>
         <div class="card-body">
-            {{ netiddata['days']|length }} days in the queue
+
+            {{ netiddata['days']|length }} days in the queue<br>
             Went over with {{ netiddata['students_over']}} students
         </div>
     </div>
@@ -12,7 +13,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="PopupLabel_{{netid}}">{{netiddata['name']}}</h5>
+                <h5 class="modal-title" id="PopupLabel_{{netid}}">{{netiddata['name']}} - {{netiddata['students']}} students</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

@@ -77,11 +77,11 @@ def remove_student():
 
 @app.route('/updatemetrics', methods=['GET'])
 def update_metrics():
-    pst = request.args.get('start')
-    pet = request.args.get('end')
-    if pst and pet:
+    try:
+        pst = request.args.get('start')
+        pet = request.args.get('end')
         period = period(*time_format(pst, pet))
-    else:
+    except ValueError as e:
         period = {}
     html = render_template('metrics.html',
                            active=active(),
@@ -93,11 +93,11 @@ def update_metrics():
 
 @ app.route('/updateperiod', methods=['GET'])
 def update_period():
-    pst = request.args.get('pst')
-    pet = request.args.get('pet')
-    if pst and pet:
+    try:
+        pst = request.args.get('pst')
+        pet = request.args.get('pet')
         periodVar = period(*time_format(pst, pet))
-    else:
+    except ValueError as e:
         periodVar = {}
     html = render_template('periodBody.html',
                            period=periodVar)
@@ -165,6 +165,7 @@ def period(start_str, end_str):
                    "page": 1
                    }
         student_ret = {'days': {}, 'students_over': 0,
+                       'students': 0,
                        'name': full_roster[netid]['name']}
         while url:
             json = requests.get(url, auth=wsse_auth, params=payload).json()
@@ -187,7 +188,8 @@ def period(start_str, end_str):
                     'colorclass': ['notoverclass', 'overclass'][length > 25],
                     'student_info': "{} ({})".format(sess['author_full_name'], sess['course'][-3:])
                 })
-                student_ret['students_over'] += student_ret['days'][day][-1] =='overclass'
+                student_ret['students'] += 1
+                student_ret['students_over'] += student_ret['days'][day][-1]['colorclass'] == 'overclass'
             url = json['next']
         ret[netid] = student_ret
 
