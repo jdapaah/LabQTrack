@@ -1,7 +1,0 @@
-this can be hosted under labqueue.io/qtrack or /attendance
-
-the list of selected students NEEDS TO BE CLIENT-side data - otherwise mutiple users cannot use the service concurrently
-Add scrolling to the search results
-Have Class Year as a default that cannot be selected but sends -1 anyway
-Make selected list hamburger on the side
-make selected elements bubbles with X and a newTab buttons
