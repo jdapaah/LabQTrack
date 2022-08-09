@@ -1,0 +1,9 @@
+# Hidden for security, every user has their own
+api_auth.py
+
+# Hiddens
+.DS_Store
+.idea/
+.venv/
+__pycache__/
+notes.txt
