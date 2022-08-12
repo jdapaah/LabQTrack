@@ -235,6 +235,11 @@ def active():
         )
     return ret
 
+@app.add_template_filter
+def date_format(value):
+    date = datetime.strptime(value, DATE_FORMAT_STR)
+    return date.strftime("%B %d, %Y")
+
 
 def time_format(start_str_short, end_str_short):
     start_str = datetime.strptime(start_str_short, DATE_FORMAT_STR)\

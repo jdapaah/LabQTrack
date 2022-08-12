@@ -19,7 +19,7 @@
             <div class="modal-body">
                 {% for day_str, day_list in netiddata['days'].items() %}
                 <div class="card">
-                    <h5>{{day_str}}</h5>
+                    <h5>{{day_str|date_format}}</h5>
                     <div class='row align-content-center'>
                         <div class="card-body">
                             {% for session in day_list %}
