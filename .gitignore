@@ -7,3 +7,4 @@ api_auth.py
 .venv/
 __pycache__/
 notes.txt
+Demos/
