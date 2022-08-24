@@ -206,10 +206,8 @@ def active():
         url = "https://www.labqueue.io/api/v1/requests/query/"
 
         current_time_obj = datetime.now()
-        current_time_str = current_time_obj.strftime(TIME_FORMAT_STR)
         # current_time_str = '2021-11-10T21:59'
-        # current_time_obj = datetime.strptime(
-            # current_time_str, DATE_TIME_FORMAT_STR)
+        # current_time_obj = datetime.strptime(current_time_str, DATE_TIME_FORMAT_STR)
         payload = {
             "is_open": "true",
             # 'open_at_time': current_time_str,
