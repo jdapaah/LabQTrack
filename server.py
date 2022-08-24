@@ -18,9 +18,9 @@ from roster import student_search
 app = Flask(__name__)
 app.secret_key = os.urandom(16)
 wsse_auth = WSSEAuth(username, API_SECRET)
-DATE_TIME_FORMAT_STR = "%Y-%m-%dT%H:%M"
 TIME_FORMAT_STR = "%H:%M"
 DATE_FORMAT_STR = "%Y-%m-%d"
+DATE_TIME_FORMAT_STR = DATE_FORMAT_STR+"T"+TIME_FORMAT_STR
 
 selected_students = {}
 # the full roster of the students, saved to speed up search process
@@ -205,11 +205,11 @@ def active():
     for netid in selected_students:
         url = "https://www.labqueue.io/api/v1/requests/query/"
 
-        # current_time_obj = dt.now()
-        # current_time_str = current_time_obj.strftime(TIME_FORMAT_STR)
-        current_time_str = '2021-11-10T21:59'
-        current_time_obj = datetime.strptime(
-            current_time_str, DATE_TIME_FORMAT_STR)
+        current_time_obj = datetime.now()
+        current_time_str = current_time_obj.strftime(TIME_FORMAT_STR)
+        # current_time_str = '2021-11-10T21:59'
+        # current_time_obj = datetime.strptime(
+            # current_time_str, DATE_TIME_FORMAT_STR)
         payload = {
             # "is_open": "true",
             'open_at_time': current_time_str,
