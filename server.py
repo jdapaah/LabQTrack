@@ -211,9 +211,9 @@ def active():
         # current_time_obj = datetime.strptime(
             # current_time_str, DATE_TIME_FORMAT_STR)
         payload = {
-            # "is_open": "true",
-            'open_at_time': current_time_str,
-            'accepted_before': current_time_str,
+            "is_open": "true",
+            # 'open_at_time': current_time_str,
+            # 'accepted_before': current_time_str,
             "accepted_by": netid
         }
         sessions = requests.get(url=url,
