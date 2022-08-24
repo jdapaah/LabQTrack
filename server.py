@@ -226,9 +226,11 @@ def active():
         ta = datetime.strptime(sess['time_accepted'], DATE_TIME_FORMAT_STR)
 
         ret['present'].append(
-            "{} started current session with {} at {}, has been working for {} minutes.".format(
-                "{} ({})".format(full_roster[netid]['name'], netid),
-                "{} ({})".format(sess['author_full_name'], sess['author_netid']),
+            "{} ({}) started current session with {} ({}) at {}, has been working for {} minutes.".format(
+                full_roster[netid]['name'], 
+                netid, 
+                sess['author_full_name'], 
+                sess['author_netid'],
                 ta.strftime(TIME_FORMAT_STR),
                 (current_time_obj - ta).seconds // 60
             )
