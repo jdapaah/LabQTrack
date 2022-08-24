@@ -80,12 +80,12 @@ def update_metrics():
     try:
         pst = request.args.get('start')
         pet = request.args.get('end')
-        period = period(*time_format(pst, pet))
-    except ValueError as e:
-        period = {}
+        periodVar = period(*time_format(pst, pet))
+    except Exception as e:  # ValueError, TypeError
+        periodVar = {}
     html = render_template('metrics.html',
                            active=active(),
-                           period=period,
+                           period=periodVar,
                            shift=shift())
     response = make_response(html)
     return response
@@ -97,7 +97,7 @@ def update_period():
         pst = request.args.get('pst')
         pet = request.args.get('pet')
         periodVar = period(*time_format(pst, pet))
-    except ValueError as e:
+    except Exception as e:  # ValueError, TypeError
         periodVar = {}
     html = render_template('periodBody.html',
                            period=periodVar)
@@ -201,13 +201,13 @@ def shift():
 
 
 def active():
-    ret = {}
+    ret = {'present': [], 'absent': []}
     for netid in selected_students:
         url = "https://www.labqueue.io/api/v1/requests/query/"
 
         # current_time_obj = dt.now()
         # current_time_str = current_time_obj.strftime(TIME_FORMAT_STR)
-        current_time_str = '2021-11-03T20:21'
+        current_time_str = '2021-11-10T21:59'
         current_time_obj = datetime.strptime(
             current_time_str, DATE_TIME_FORMAT_STR)
         payload = {
@@ -216,21 +216,31 @@ def active():
             'accepted_before': current_time_str,
             "accepted_by": netid
         }
-        sess = requests.get(url=url,
+        sessions = requests.get(url=url,
                             auth=wsse_auth,
                             params=payload).json()['results']
-        if not sess:  # not in queue
+        if not sessions:  # not in queue
+            ret['absent'].append(full_roster[netid]['name'])
             continue
-        sess = sess[0]
+        sess = sessions.pop()
         ta = datetime.strptime(sess['time_accepted'], DATE_TIME_FORMAT_STR)
 
-        ret[netid] = "{} started current session with {} at {}, has been working for {} minutes.".format(
-            "{} ({})".format(full_roster[netid]['name'], netid),
-            "{} ({})".format(sess['author_full_name'], sess['author_netid']),
-            sess['time_accepted'][-5:],
-            (current_time_obj - ta).seconds // 60
+        ret['present'].append(
+            "{} ({}) started current session with {} ({}) at {}, has been working for {} minutes.".format(
+                full_roster[netid]['name'], 
+                netid, 
+                sess['author_full_name'], 
+                sess['author_netid'],
+                ta.strftime(TIME_FORMAT_STR),
+                (current_time_obj - ta).seconds // 60
+            )
         )
     return ret
+
+@app.add_template_filter
+def date_format(value):
+    date = datetime.strptime(value, DATE_FORMAT_STR)
+    return date.strftime("%B %d, %Y")
 
 
 def time_format(start_str_short, end_str_short):
@@ -273,18 +283,18 @@ if __name__ == "__main__":
     host = args.host
     print('host:', host, file=stdout)
 
-    # try:
-    # redirect to HTTPS when on heroku, don't use security protocol on localhost
-    if host != 'localhost':
-        talisman = Talisman(app, content_security_policy=None)
-        print('talisman security', file=stdout)
-    else:
-        print('running local host, no talisman security', file=stdout)
+    try:
+        # redirect to HTTPS when on heroku, don't use security protocol on localhost
+        if host != 'localhost':
+            talisman = Talisman(app, content_security_policy=None)
+            print('talisman security', file=stdout)
+        else:
+            print('running local host, no talisman security', file=stdout)
 
-    port = int(os.environ.get('PORT', 5001))
-    full_roster = fill_roster()
+        port = int(os.environ.get('PORT', 5001))
+        full_roster = fill_roster()
 
-    app.run(host=host, port=port, debug=False)
-    # except Exception as ex:
-    #     print(ex, file=stderr)
-    #     exit(1)
+        app.run(host=host, port=port, debug=False)
+    except Exception as ex:
+        print(ex, file=stderr)
+        exit(1)
