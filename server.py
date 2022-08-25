@@ -182,15 +182,17 @@ def period(start_str, end_str):
                 if day not in student_ret['days']:
                     student_ret['days'][day] = []
                 student_ret['days'][day].append({
-                    'start_time': sess['time_accepted'][-5:],
-                    'end_time': sess['time_closed'][-5:],
-                    'length': length,
-                    'colorclass': ['notoverclass', 'overclass'][length > 25],
+                    'start_time':   sess['time_accepted'][-5:],
+                    'end_time':     sess['time_closed'][-5:],
+                    'length':       length,
+                    'colorclass':   ['notoverclass', 'overclass'][length > 25],
                     'student_info': "{} ({})".format(sess['author_full_name'], sess['course'][-3:])
                 })
                 student_ret['students'] += 1
                 student_ret['students_over'] += student_ret['days'][day][-1]['colorclass'] == 'overclass'
             url = json['next']
+            payload={} # ignore the params after the first run, included in the url going forward
+
         ret[netid] = student_ret
 
     return ret
