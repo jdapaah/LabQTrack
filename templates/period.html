@@ -31,10 +31,12 @@
     var requestPeriod = null;
 
     function updatePeriod() {
+        let sel = selected();
         let start = $('#startInput').val();
         let end = $('#endInput').val()
         start = encodeURIComponent(start);
         end = encodeURIComponent(end);
+        sel = encodeURIComponent(sel);
 
         if (requestPeriod != null)
             requestPeriod.abort();
@@ -42,7 +44,7 @@
         requestPeriod = $.ajax(
             {
                 type: 'GET',
-                url: `/updateperiod?pst=${start}&pet=${end}`,
+                url: `/updateperiod?pst=${start}&pet=${end}&sel=${sel}`,
                 success: updatePeriodResponse
             }
         );

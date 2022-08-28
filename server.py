@@ -1,5 +1,4 @@
 ##
-from curses import raw
 from sys import stdout, stderr
 from datetime import datetime, timedelta
 from argparse import ArgumentParser
@@ -67,7 +66,7 @@ def add_student():
     else: 
         netids = rawnetids.split(',')
         netids.append(netid)
-    return update_student(netids+[netid])
+    return update_student(netids)
 
 
 @app.route('/removestudent', methods=['GET'])

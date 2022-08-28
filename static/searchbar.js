@@ -7,7 +7,7 @@ function updateSelectedResponse(response) {
    $('#selectedStudents').html(response)
    updateMetrics()
 }
-function updateMetricsResponse(response){
+function updateMetricsResponse(response) {
    $('#metricsWrapper').html(response)
    getSearchResults()
 }
@@ -17,7 +17,7 @@ function updateMetricsResponse(response){
 function selected() {
    let selectedList = [];
    $('.selected').each(function (_, element) {
-       selectedList.push(element.value)
+      selectedList.push(element.value)
    })
    const selected = selectedList.join()
    console.log(selected)
@@ -58,44 +58,45 @@ function updateSelected(baseurl, netid) {
 function updateMetrics() {
    if (request != null)
       request.abort();
-
+   let sel = selected();
+   sel = encodeURIComponent(sel);
    request = $.ajax(
       {
          type: 'GET',
-         url: '/updatemetrics',
+         url: `/updatemetrics?sel=${sel}`,
          success: updateMetricsResponse
       }
    );
 }
 function getSearchResults() {
-    let name = $('#nameID').val();
-    let netid = $('#netID').val();
-    let year = $('#yearID').val();
+   let name = $('#nameID').val();
+   let netid = $('#netID').val();
+   let year = $('#yearID').val();
 
-    // what to search by
-    name = encodeURIComponent(name);
-    netid = encodeURIComponent(netid);
-    year = encodeURIComponent(year);
-    // what to filter out
-    const sel = encodeURIComponent(selected());
+   // what to search by
+   name = encodeURIComponent(name);
+   netid = encodeURIComponent(netid);
+   year = encodeURIComponent(year);
+   // what to filter out
+   const sel = encodeURIComponent(selected());
 
-    let url = `/students?name=${name}&netid=${netid}&year=${year}&sel=${sel}`;
+   let url = `/students?name=${name}&netid=${netid}&year=${year}&sel=${sel}`;
 
-    if (request != null)
-        request.abort();
+   if (request != null)
+      request.abort();
 
-    request = $.ajax(
-        {
-            type: 'GET',
-            url: url,
-            success: searchResultResponse
-        }
-    );
+   request = $.ajax(
+      {
+         type: 'GET',
+         url: url,
+         success: searchResultResponse
+      }
+   );
 }
 
 function setup() {
-    $('#nameID').on('input', getSearchResults);
-    $('#netID').on('input', getSearchResults);
-    $('#yearID').on('input', getSearchResults);
+   $('#nameID').on('input', getSearchResults);
+   $('#netID').on('input', getSearchResults);
+   $('#yearID').on('input', getSearchResults);
 }
 $('document').ready(setup);
