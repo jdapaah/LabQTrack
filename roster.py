@@ -1,4 +1,4 @@
-def student_search(netid, name, year, d):
+def student_search(netid, name, year, roster):
     name = name.lower().strip() if name else ''
     netid = netid.lower().strip() if netid else ''
     year = int(year)
@@ -6,8 +6,8 @@ def student_search(netid, name, year, d):
     if not name and not netid and year == -1:  # if all null
         return 2, {}  # return empty list
     ret = {}
-    for full_netid in d:
-        student = d[full_netid]
+    for full_netid in roster:
+        student = roster[full_netid]
         if (name in student['name'].lower()) \
                 and (netid in full_netid) \
                 and (year == -1 or year == student['year']):

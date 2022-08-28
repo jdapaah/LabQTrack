@@ -1,4 +1,5 @@
 ##
+from curses import raw
 from sys import stdout, stderr
 from datetime import datetime, timedelta
 from argparse import ArgumentParser
@@ -22,7 +23,6 @@ TIME_FORMAT_STR = "%H:%M"
 DATE_FORMAT_STR = "%Y-%m-%d"
 DATE_TIME_FORMAT_STR = DATE_FORMAT_STR+"T"+TIME_FORMAT_STR
 
-selected_students = {}
 # the full roster of the students, saved to speed up search process
 full_roster = {}
 
@@ -40,15 +40,14 @@ def home_page():
     return response
 
 
-# JS route for adding/removing students to the selected list
-def update_student():
-    # TODO selected_students from client side
+# update the html for the selected list of students
+def update_student(selected_students):
     html = ""
     if selected_students:
         html += '<h4>Selected Students</h4>\n'
         for i in selected_students:
             html += "<button class='selected' value={}><span>{} ({})</span></button>\n".format(
-                    i, selected_students[i]['name'], i)
+                    i, full_roster[i]['name'], i)
         html += \
             """
     <script>
@@ -59,44 +58,58 @@ def update_student():
     return response
 
 
-@app.route('/addstudent', methods=['POST'])
+@app.route('/addstudent', methods=['GET'])
 def add_student():
-    global selected_students
     netid = request.args.get('netid')
-    selected_students[netid] = full_roster[netid]
-    return update_student()
+    rawnetids = request.args.get('sel')
+    if not rawnetids:
+        netids = [netid]
+    else: 
+        netids = rawnetids.split(',')
+        netids.append(netid)
+    return update_student(netids+[netid])
 
 
-@app.route('/removestudent', methods=['POST'])
+@app.route('/removestudent', methods=['GET'])
 def remove_student():
-    global selected_students
     netid = request.args.get('netid')
-    selected_students.pop(netid)
-    return update_student()
+    netids = request.args.get('sel').split(',')
+    netids.remove(netid)
+    return update_student(netids)
 
 
 @app.route('/updatemetrics', methods=['GET'])
 def update_metrics():
+    rawnetids = request.args.get('sel')
+    if not rawnetids:
+        netids = []
+    else: 
+        netids = rawnetids.split(',')
     try:
         pst = request.args.get('start')
         pet = request.args.get('end')
-        periodVar = period(*time_format(pst, pet))
+        periodVar = period(*time_format(pst, pet), netids)
     except Exception as e:  # ValueError, TypeError
         periodVar = {}
     html = render_template('metrics.html',
-                           active=active(),
+                           active=active(netids),
                            period=periodVar,
                            shift=shift())
     response = make_response(html)
     return response
 
 
-@ app.route('/updateperiod', methods=['GET'])
+@app.route('/updateperiod', methods=['GET'])
 def update_period():
+    rawnetids = request.args.get('sel')
+    if not rawnetids:
+        netids = []
+    else: 
+        netids = rawnetids.split(',')
     try:
         pst = request.args.get('pst')
         pet = request.args.get('pet')
-        periodVar = period(*time_format(pst, pet))
+        periodVar = period(*time_format(pst, pet), netids)
     except Exception as e:  # ValueError, TypeError
         periodVar = {}
     html = render_template('periodBody.html',
@@ -104,20 +117,19 @@ def update_period():
     response = make_response(html)
     return response
 
-# JS route for updating search list of students
-
-
-@ app.route('/students', methods=['GET'])
+# JS route for adding students to the selected list
+@app.route('/students', methods=['GET'])
 def search_students():
     netid = request.args.get('netid')
     name = request.args.get('name')
     year = request.args.get('year')
+    selected = request.args.get('sel').split(',')
 
     code, students = student_search(netid, name, year, full_roster)
     # only list students that aren't in the list already
     students = {key: val for
                 key, val in students.items()
-                if key not in selected_students}
+                if key not in selected}
     html = ""
     if code == 0:  # success
         for i in students:
@@ -154,7 +166,7 @@ def about_page():
     return make_response(html)
 
 
-def period(start_str, end_str):
+def period(start_str, end_str, selected_students):
     ret = {}
     for netid in selected_students:
         url = "https://www.labqueue.io/api/v1/requests/query/"
@@ -202,7 +214,7 @@ def shift():
     return {}
 
 
-def active():
+def active(selected_students):
     ret = {'present': [], 'absent': []}
     for netid in selected_students:
         url = "https://www.labqueue.io/api/v1/requests/query/"
