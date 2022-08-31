@@ -13,6 +13,7 @@ import requests
 import auth
 from api_auth import username, API_SECRET
 from roster import student_search
+import json
 # from shift_search import shift
 
 app = Flask(__name__)
@@ -61,12 +62,8 @@ def update_student(selected_students):
 def add_student():
     netid = request.args.get('netid')
     rawnetids = request.args.get('sel')
-    if not rawnetids:
-        netids = [netid]
-    else: 
-        netids = rawnetids.split(',')
-        netids.append(netid)
-    return update_student(netids)
+    netids = rawnetids.split(',') if rawnetids else []
+    return update_student(netids+[netid])
 
 
 @app.route('/removestudent', methods=['GET'])
@@ -77,23 +74,25 @@ def remove_student():
     return update_student(netids)
 
 
+def periodDataHTML(netids):
+    try:
+        pst = request.args.get('pst')
+        print(pst)
+        pet = request.args.get('pet')
+        periodVar = period(*time_format(pst, pet), netids)
+    except (ValueError, TypeError):
+        periodVar = {}
+    return render_template('periodDataWrapper.html', period=periodVar)
+
+
 @app.route('/updatemetrics', methods=['GET'])
 def update_metrics():
     rawnetids = request.args.get('sel')
-    if not rawnetids:
-        netids = []
-    else: 
-        netids = rawnetids.split(',')
-    try:
-        pst = request.args.get('start')
-        pet = request.args.get('end')
-        periodVar = period(*time_format(pst, pet), netids)
-    except Exception as e:  # ValueError, TypeError
-        periodVar = {}
-    html = render_template('metrics.html',
-                           active=active(netids),
-                           period=periodVar,
-                           shift=shift())
+    netids = rawnetids.split(',') if rawnetids else []
+    html = {'activehtml': render_template('active.html',
+                                          active=active(netids)),
+            'periodbody': periodDataHTML(netids)}
+    html = json.dumps(html)
     response = make_response(html)
     return response
 
@@ -101,22 +100,14 @@ def update_metrics():
 @app.route('/updateperiod', methods=['GET'])
 def update_period():
     rawnetids = request.args.get('sel')
-    if not rawnetids:
-        netids = []
-    else: 
-        netids = rawnetids.split(',')
-    try:
-        pst = request.args.get('pst')
-        pet = request.args.get('pet')
-        periodVar = period(*time_format(pst, pet), netids)
-    except Exception as e:  # ValueError, TypeError
-        periodVar = {}
-    html = render_template('periodBody.html',
-                           period=periodVar)
+    netids = rawnetids.split(',') if rawnetids else []
+    html = periodDataHTML(netids)
     response = make_response(html)
     return response
 
 # JS route for adding students to the selected list
+
+
 @app.route('/students', methods=['GET'])
 def search_students():
     netid = request.args.get('netid')
@@ -202,7 +193,7 @@ def period(start_str, end_str, selected_students):
                 student_ret['students'] += 1
                 student_ret['students_over'] += student_ret['days'][day][-1]['colorclass'] == 'overclass'
             url = json['next']
-            payload={} # ignore the params after the first run, included in the url going forward
+            payload = {}  # ignore the params after the first run, included in the url going forward
 
         ret[netid] = student_ret
 
@@ -228,8 +219,8 @@ def active(selected_students):
             "accepted_by": netid
         }
         sessions = requests.get(url=url,
-                            auth=wsse_auth,
-                            params=payload).json()['results']
+                                auth=wsse_auth,
+                                params=payload).json()['results']
         if not sessions:  # not in queue
             ret['absent'].append(full_roster[netid]['name'])
             continue
@@ -238,15 +229,16 @@ def active(selected_students):
 
         ret['present'].append(
             "{} ({}) started current session with {} ({}) at {}, has been working for {} minutes.".format(
-                full_roster[netid]['name'], 
-                netid, 
-                sess['author_full_name'], 
+                full_roster[netid]['name'],
+                netid,
+                sess['author_full_name'],
                 sess['author_netid'],
                 ta.strftime(TIME_FORMAT_STR),
                 (current_time_obj - ta).seconds // 60
             )
         )
     return ret
+
 
 @app.add_template_filter
 def date_format(value):

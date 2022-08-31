@@ -1,17 +1,5 @@
 'use strict';
 
-function searchResultResponse(response) {
-   $('#searchresults').html(response);
-}
-function updateSelectedResponse(response) {
-   $('#selectedStudents').html(response)
-   updateMetrics()
-}
-function updateMetricsResponse(response) {
-   $('#metricsWrapper').html(response)
-   getSearchResults()
-}
-
 // read button values to get students that have been selected
 //TODO cookies?
 function selected() {
@@ -20,7 +8,6 @@ function selected() {
       selectedList.push(element.value)
    })
    const selected = selectedList.join()
-   console.log(selected)
    return selected
 }
 
@@ -38,9 +25,9 @@ function removeStudent() {
 }
 
 let request = null;
+let parsed = null;
 
 function updateSelected(baseurl, netid) {
-   console.log(baseurl)
    let sel = selected();
    sel = encodeURIComponent(sel);
    let url = baseurl + `?sel=${sel}&netid=${netid}`
@@ -51,7 +38,10 @@ function updateSelected(baseurl, netid) {
       {
          type: 'GET',
          url: url,
-         success: updateSelectedResponse
+         success: (res) => {
+            $('#selectedStudents').html(res)
+            updateMetrics()
+         }
       }
    );
 }
@@ -59,12 +49,21 @@ function updateMetrics() {
    if (request != null)
       request.abort();
    let sel = selected();
+   let start = $('#startInput').val();
+   let end = $('#endInput').val()
+   start = encodeURIComponent(start);
+   end = encodeURIComponent(end);
    sel = encodeURIComponent(sel);
    request = $.ajax(
       {
          type: 'GET',
-         url: `/updatemetrics?sel=${sel}`,
-         success: updateMetricsResponse
+         url: `/updatemetrics?pst=${start}&pet=${end}&sel=${sel}`,
+         success: (res) => {
+            parsed = JSON.parse(res)
+            $('#activeWrapper').html(parsed.activehtml)
+            $('#periodDataWrapper').html(parsed.periodbody)
+            getSearchResults()
+         }
       }
    );
 }
@@ -80,16 +79,16 @@ function getSearchResults() {
    // what to filter out
    const sel = encodeURIComponent(selected());
 
-   let url = `/students?name=${name}&netid=${netid}&year=${year}&sel=${sel}`;
-
    if (request != null)
       request.abort();
 
    request = $.ajax(
       {
          type: 'GET',
-         url: url,
-         success: searchResultResponse
+         url: `/students?name=${name}&netid=${netid}&year=${year}&sel=${sel}`,
+         success: (res) => {
+            $('#searchresults').html(res);
+         }
       }
    );
 }

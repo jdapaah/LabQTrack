@@ -10,7 +10,7 @@
 <div id="periodBody">
     <input id="startInput" type="date" value="{{pst}}">
     <input id="endInput" type="date" value="{{pet}}">
-    <div id='periodWrapper'></div>
+    <div id='periodDataWrapper'></div>
 </div>
 <style>
     .overclass {
@@ -23,10 +23,6 @@
 </style>
 <script>
     'use strict';
-
-    function updatePeriodResponse(response) {
-        $('#periodWrapper').html(response)
-    }
 
     var requestPeriod = null;
 
@@ -45,7 +41,9 @@
             {
                 type: 'GET',
                 url: `/updateperiod?pst=${start}&pet=${end}&sel=${sel}`,
-                success: updatePeriodResponse
+                success: (res) => {
+                    $('#periodDataWrapper').html(res)
+                }
             }
         );
     }

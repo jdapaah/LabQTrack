@@ -10,7 +10,11 @@
     {% include 'header.html' %}
     {% include 'searchbar.html' %}
     <div id='metricsWrapper'>
-        {% include 'metrics.html' %}
+        <div id="activeWrapper">
+            {% include 'active.html' %}
+        </div>
+        {% include 'period.html' %}
+        {% include 'shift.html' %}
     </div>
     {% include 'footer.html' %}
 </body>
