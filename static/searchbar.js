@@ -8,7 +8,7 @@ function selected() {
       selectedList.push(element.value)
    })
    const selected = selectedList.join()
-   return selected
+   return encodeURIComponent(selected)
 }
 
 function addStudent() {
@@ -29,7 +29,6 @@ let parsed = null;
 
 function updateSelected(baseurl, netid) {
    let sel = selected();
-   sel = encodeURIComponent(sel);
    let url = baseurl + `?sel=${sel}&netid=${netid}`
    if (request != null)
       request.abort();
@@ -53,7 +52,6 @@ function updateMetrics() {
    let end = $('#endInput').val()
    start = encodeURIComponent(start);
    end = encodeURIComponent(end);
-   sel = encodeURIComponent(sel);
    request = $.ajax(
       {
          type: 'GET',
