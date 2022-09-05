@@ -1,12 +1,13 @@
 <div class="container-fluid" id='SearchBar' style="background-color:#295078; color:white">
    <div class="row">
-      <div class="col-sm-4">
+      <div class="col-sm-1"></div>
+      <div class="col-sm-3">
          <input placeholder="Name" id="nameID" class="form-control searchinput" autofocus>
       </div>
-      <div class="col-sm-4">
+      <div class="col-sm-3">
          <input placeholder="Netid" id="netID" class="form-control searchinput">
       </div>
-      <div class="col-sm-4">
+      <div class="col-sm-3">
          <select class="form-select searchinput" id="yearID" name="year">
             <!-- <option selected disabled hidden value="-1">Class Year</option> -->
             <option selected value="-1">Class Year</option>
@@ -17,6 +18,15 @@
             <option value="2000">Faculty</option>
          </select>
       </div>
+      <div class="col-sm-1">
+         <div class="row">
+            <button class="form-control primary" id="all126">COS 126</button>
+         </div>
+         <div class="row">
+            <button class="form-control primary" id="all2xx">COS 2xx</button>
+         </div>
+      </div>
+      <div class="col-sm-1"></div>
    </div>
 </div>
 <div class="container-fluid" id="searchresults"></div>

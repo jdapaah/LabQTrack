@@ -97,5 +97,35 @@ function setup() {
    $('#nameID').on('input', getSearchResults);
    $('#netID').on('input', getSearchResults);
    $('#yearID').on('input', getSearchResults);
+   $('#all126').click(() => {
+      if (request != null)
+         request.abort();
+
+      request = $.ajax(
+         {
+            type: 'GET',
+            url: '/coursestudents?course=126',
+            success: (res) => {
+               $('#selectedStudents').html(res)
+               updateMetrics()
+            }
+         }
+      );
+   })
+   $('#all2xx').click(() => {
+      if (request != null)
+         request.abort();
+
+      request = $.ajax(
+         {
+            type: 'GET',
+            url: '/coursestudents?course=2xx',
+            success: (res) => {
+               $('#selectedStudents').html(res)
+               updateMetrics()
+            }
+         }
+      );
+   })
 }
 $('document').ready(setup);

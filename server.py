@@ -73,6 +73,15 @@ def remove_student():
     netids.remove(netid)
     return update_student(netids)
 
+@app.route('/coursestudents', methods=['GET'])
+def course_students():
+    course = request.args.get('course')
+    if course == '126':
+        netids=[netid for netid in full_roster if '126' in full_roster[netid]['courses']]
+    elif course == '2xx':
+        netids=[netid for netid in full_roster if '226' in full_roster[netid]['courses']]
+    return update_student(netids)
+
 
 def periodDataHTML(netids):
     try:
@@ -156,9 +165,9 @@ def about_page():
     return make_response(html)
 
 
-def period(start_str, end_str, selected_students):
+def period(start_str, end_str, netids):
     ret = {}
-    for netid in selected_students:
+    for netid in netids:
         url = "https://www.labqueue.io/api/v1/requests/query/"
         payload = {"is_open": "false",
                    "created_after": start_str,
@@ -178,7 +187,7 @@ def period(start_str, end_str, selected_students):
                 ta = datetime.strptime(
                     sess['time_accepted'], DATE_TIME_FORMAT_STR)
                 length = (tc - ta).seconds // 60
-                if length < 5:
+                if length < 2:
                     continue
                 day: str = sess['time_accepted'][:10]
                 if day not in student_ret['days']:
@@ -204,9 +213,9 @@ def shift():
     return {}
 
 
-def active(selected_students):
+def active(netids):
     ret = {'present': [], 'absent': []}
-    for netid in selected_students:
+    for netid in netids:
         url = "https://www.labqueue.io/api/v1/requests/query/"
 
         current_time_obj = datetime.now()
@@ -266,7 +275,8 @@ def fill_roster():
             # some faculty grad_year values (cmorretti) are null instead of 0
             d['grad_year'] = d['grad_year'] if d['grad_year'] != None else 0
             ret[d['netid']] = {'name': d['full_name'],
-                               'year': d['grad_year'] % 100 + 2000}  # some grad_year_values are 24 vs 2024
+                               'year': d['grad_year'] % 100 + 2000, # some grad_year_values are 24 vs 2024
+                               'courses': [s[-3:] for s in d['courses']]}
         roster_url = full_dict['next']
     return ret
 
