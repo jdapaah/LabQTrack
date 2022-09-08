@@ -8,8 +8,9 @@
     </p>
 </div>
 <div id="periodBody">
-    <input id="startInput" type="date" value="{{pst}}">
-    <input id="endInput" type="date" value="{{pet}}">
+    <input class="periodTimeInput" id="startInput" type="date" value="{{pst}}">
+    <input class="periodTimeInput" id="endInput" type="date" value="{{pet}}">
+    <div class="loader"></div>
     <div id='periodDataWrapper'></div>
 </div>
 <style>
@@ -20,36 +21,33 @@
     .notoverclass {
         color: rgb(32, 208, 32);
     }
+
+    .loader {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #2d2e2f;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 <script>
     'use strict';
 
-    var requestPeriod = null;
-
-    function updatePeriod() {
-        let sel = selected();
-        let start = $('#startInput').val();
-        let end = $('#endInput').val()
-        start = encodeURIComponent(start);
-        end = encodeURIComponent(end);
-
-        if (requestPeriod != null)
-            requestPeriod.abort();
-
-        requestPeriod = $.ajax(
-            {
-                type: 'GET',
-                url: `/updateperiod?pst=${start}&pet=${end}&sel=${sel}`,
-                success: (res) => {
-                    $('#periodDataWrapper').html(res)
-                }
-            }
-        );
-    }
-
-    function setupPeriodWindow() {
-        $('#startInput').on('change', updatePeriod);
-        $('#endInput').on('change', updatePeriod);
-    }
-    $('document').ready(setupPeriodWindow);
+    $('document').ready(() => {
+        $(".loader").hide()
+        $('.periodTimeInput').on('change', () => {
+            updateMetrics(false)
+        });
+    });
 </script>

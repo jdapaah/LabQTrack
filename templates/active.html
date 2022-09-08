@@ -8,11 +8,11 @@
     </p>
 </div>
 <div id='activeBody' class="container-fluid">
-    {% for info in active['present'] %}
-    <div class="card">
+    {% for student in active['present'] %}
+    <div class="card {{info['netid']}}-comp">
         <div class='row align-content-center'>
             <div class="card-body">
-                {{ info }}
+                {{ student['info'] }}
             </div>
         </div>
     </div>
@@ -21,7 +21,7 @@
     <h5><em>Students not currently in Queue</em></h5>
     <ul>
         {% for student in active['absent'] %}
-        <li><em>{{student}}</em></li>
+        <li class="{{student['netid']}}-comp"><em>{{student['name']}}</em></li>
         {% endfor %}
     </ul>
     {% endif %}

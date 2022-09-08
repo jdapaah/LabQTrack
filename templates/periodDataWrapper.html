@@ -1,5 +1,5 @@
 {% for netid, netiddata in period.items() %}
-<div class="card col-sm-4" data-bs-toggle="modal" data-bs-target="#Popup_{{netid}}">
+<div class="card col-sm-4 {{netid}}-comp" data-bs-toggle="modal" data-bs-target="#Popup_{{netid}}">
     <h5>{{netiddata['name']}}</h5>
     <div class='row align-content-center'>
         <div class="card-body">
@@ -9,7 +9,7 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="Popup_{{netid}}" tabindex="-1" aria-labelledby="PopupLabel_{{netid}}" aria-hidden="true">
+<div class="modal fade {{netid}}-comp" id="Popup_{{netid}}" tabindex="-1" aria-labelledby="PopupLabel_{{netid}}" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

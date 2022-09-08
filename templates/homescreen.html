@@ -9,13 +9,11 @@
 <body>
     {% include 'header.html' %}
     {% include 'searchbar.html' %}
-    <div id='metricsWrapper'>
-        <div id="activeWrapper">
-            {% include 'active.html' %}
-        </div>
-        {% include 'period.html' %}
-        {% include 'shift.html' %}
+    <div id="activeWrapper">
+        {% include 'active.html' %}
     </div>
+    {% include 'period.html' %}
+    {% include 'shift.html' %}
     {% include 'footer.html' %}
 </body>
 

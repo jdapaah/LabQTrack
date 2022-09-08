@@ -44,10 +44,10 @@ def home_page():
 def update_student(selected_students):
     html = ""
     if selected_students:
-        html += '<h4>Selected Students</h4>\n'
+        html += '<h4 id="selstudheader">Selected Students</h4>\n'
         for i in selected_students:
-            html += "<button class='selected' value={}><span>{} ({})</span></button>\n".format(
-                    i, full_roster[i]['name'], i)
+            html += "<button class='selected {}-comp' value={}><span>{} ({})</span></button>\n".format(
+                    i, i, full_roster[i]['name'], i)
         html += \
             """
     <script>
@@ -66,13 +66,6 @@ def add_student():
     return update_student(netids+[netid])
 
 
-@app.route('/removestudent', methods=['GET'])
-def remove_student():
-    netid = request.args.get('netid')
-    netids = request.args.get('sel').split(',')
-    netids.remove(netid)
-    return update_student(netids)
-
 @app.route('/coursestudents', methods=['GET'])
 def course_students():
     course = request.args.get('course')
@@ -80,13 +73,14 @@ def course_students():
         netids=[netid for netid in full_roster if '126' in full_roster[netid]['courses']]
     elif course == '2xx':
         netids=[netid for netid in full_roster if '226' in full_roster[netid]['courses']]
+    elif course == 'none':
+        netids = []
     return update_student(netids)
 
 
 def periodDataHTML(netids):
     try:
         pst = request.args.get('pst')
-        print(pst)
         pet = request.args.get('pet')
         periodVar = period(*time_format(pst, pet), netids)
     except (ValueError, TypeError):
@@ -231,13 +225,17 @@ def active(netids):
                                 auth=wsse_auth,
                                 params=payload).json()['results']
         if not sessions:  # not in queue
-            ret['absent'].append(full_roster[netid]['name'])
+            ret['absent'].append({
+                'netid': netid,
+                'name': full_roster[netid]['name']
+                })
             continue
         sess = sessions.pop()
         ta = datetime.strptime(sess['time_accepted'], DATE_TIME_FORMAT_STR)
 
-        ret['present'].append(
-            "{} ({}) started current session with {} ({}) at {}, has been working for {} minutes.".format(
+        ret['present'].append({
+            'netid': netid,
+            'info': "{} ({}) started current session with {} ({}) at {}, has been working for {} minutes.".format(
                 full_roster[netid]['name'],
                 netid,
                 sess['author_full_name'],
@@ -245,7 +243,7 @@ def active(netids):
                 ta.strftime(TIME_FORMAT_STR),
                 (current_time_obj - ta).seconds // 60
             )
-        )
+        })
     return ret
 
 

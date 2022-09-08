@@ -15,19 +15,6 @@ function addStudent() {
    let baseurl = '/addstudent'
    let netid = $(this).val();
    netid = encodeURIComponent(netid);
-   updateSelected(baseurl, netid);
-}
-function removeStudent() {
-   let baseurl = '/removestudent';
-   let netid = $(this).val();
-   netid = encodeURIComponent(netid);
-   updateSelected(baseurl, netid);
-}
-
-let request = null;
-let parsed = null;
-
-function updateSelected(baseurl, netid) {
    let sel = selected();
    let url = baseurl + `?sel=${sel}&netid=${netid}`
    if (request != null)
@@ -39,29 +26,56 @@ function updateSelected(baseurl, netid) {
          url: url,
          success: (res) => {
             $('#selectedStudents').html(res)
-            updateMetrics()
+            updateMetrics(true)
          }
       }
    );
 }
-function updateMetrics() {
+function removeStudent() {
+   let netid = $(this).val();
+   $(`.${netid}-comp`).remove(); // delete all elements for that class
+   if($(".selected").length == 0){
+      $("#selstudheader").remove();
+   }
+   getSearchResults()
+}
+
+let request = null;
+
+function updateMetrics(updateAll) {
    if (request != null)
       request.abort();
-   let sel = selected();
+   
+   let baseurl, updateMetricsSuccess;
+
+   if(updateAll) { // update all metrics
+      baseurl = '/updatemetrics';
+      updateMetricsSuccess = (res) =>{
+            let parsed = JSON.parse(res)
+            $('#activeWrapper').html(parsed.activehtml)
+            $('#periodDataWrapper').html(parsed.periodbody)
+            getSearchResults();
+            $(".loader").hide();
+      };
+   }
+   else { // only update the period metric
+      baseurl = '/updateperiod';
+      updateMetricsSuccess = (res)=>{
+         $('#periodDataWrapper').html(res)
+         getSearchResults();
+         $(".loader").hide();
+      };
+ }
    let start = $('#startInput').val();
    let end = $('#endInput').val()
    start = encodeURIComponent(start);
    end = encodeURIComponent(end);
+   $(".loader").show()
    request = $.ajax(
       {
          type: 'GET',
-         url: `/updatemetrics?pst=${start}&pet=${end}&sel=${sel}`,
-         success: (res) => {
-            parsed = JSON.parse(res)
-            $('#activeWrapper').html(parsed.activehtml)
-            $('#periodDataWrapper').html(parsed.periodbody)
-            getSearchResults()
-         }
+         url: baseurl+`?pst=${start}&pet=${end}&sel=${selected()}`,
+         success: (res) => updateMetricsSuccess(res)
       }
    );
 }
@@ -74,8 +88,6 @@ function getSearchResults() {
    name = encodeURIComponent(name);
    netid = encodeURIComponent(netid);
    year = encodeURIComponent(year);
-   // what to filter out
-   const sel = encodeURIComponent(selected());
 
    if (request != null)
       request.abort();
@@ -83,7 +95,7 @@ function getSearchResults() {
    request = $.ajax(
       {
          type: 'GET',
-         url: `/students?name=${name}&netid=${netid}&year=${year}&sel=${sel}`,
+         url: `/students?name=${name}&netid=${netid}&year=${year}&sel=${selected()}`,
          success: (res) => {
             $('#searchresults').html(res);
          }
@@ -92,9 +104,7 @@ function getSearchResults() {
 }
 
 function setup() {
-   $('#nameID').on('input', getSearchResults);
-   $('#netID').on('input', getSearchResults);
-   $('#yearID').on('input', getSearchResults);
+   $('.searchinput').on('input', getSearchResults);
    $('#all126').click(() => {
       if (request != null)
          request.abort();
@@ -105,7 +115,7 @@ function setup() {
             url: '/coursestudents?course=126',
             success: (res) => {
                $('#selectedStudents').html(res)
-               updateMetrics()
+               updateMetrics(true)
             }
          }
       );
@@ -120,7 +130,22 @@ function setup() {
             url: '/coursestudents?course=2xx',
             success: (res) => {
                $('#selectedStudents').html(res)
-               updateMetrics()
+               updateMetrics(true)
+            }
+         }
+      );
+   })
+   $('#allclear').click(() => {
+      if (request != null)
+         request.abort();
+
+      request = $.ajax(
+         {
+            type: 'GET',
+            url: '/coursestudents?course=none',
+            success: (res) => {
+               $('#selectedStudents').html(res)
+               updateMetrics(true)
             }
          }
       );
