@@ -12,21 +12,21 @@
             <!-- <option selected disabled hidden value="-1">Class Year</option> -->
             <option selected value="-1">Class Year</option>
             {% set senior_class = 2023 %}
-            {%for i in range(4)%}
+            {% for i in range(4) %}
             <option value="{{senior_class+i}}">{{senior_class+i}}</option>
-            {%endfor%}
+            {% endfor %}
             <option value="2000">Faculty</option>
          </select>
       </div>
       <div class="col-sm-1">
          <div class="row">
-            <button class="form-control primary" id="all126">COS 126</button>
+            <button class="form-control primary searchbar-button" id="all126" value="126">COS 126</button>
          </div>
          <div class="row">
-            <button class="form-control primary" id="all2xx">COS 2xx</button>
+            <button class="form-control primary searchbar-button" id="all2xx" value="2xx">COS 2xx</button>
          </div>
          <div class="row">
-            <button class="form-control primary" id="allclear">Clear Selected</button>
+            <button class="form-control primary searchbar-button" id="allclear" value="none">Clear Selected</button>
          </div>
       </div>
       <div class="col-sm-1"></div>
@@ -34,7 +34,10 @@
 </div>
 <div class="container-fluid" id="searchresults"></div>
 <hr>
-<div class="container-fluid" id="selectedStudents"></div>
+<div class="container-fluid" id="selectedStudents">
+   <h4>Selected Students</h4>
+</div>
+<div id="TODOremove"></div>
 <script src="../static/searchbar.js"></script>
 <style>
    .searchinput {

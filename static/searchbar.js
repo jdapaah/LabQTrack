@@ -11,12 +11,31 @@ function selected() {
    return encodeURIComponent(selected)
 }
 
+function addStudentHelper(parsed) {
+   $('#periodDataWrapper').append(parsed.periodhtml)
+   $('#selectedStudents').append(parsed.selectedhtml)
+   $('#TODOremove').html(parsed.script) // TODO please fix this is dumb
+   $("#selectedStudents").show()
+   if (parsed.present) {
+      $('#activePresent').append(parsed.activehtml)
+   }
+   else {
+      $('#activeAbsentList').append(parsed.activehtml)
+      $('#activeAbsent').show()
+   }
+}
+
+let request = null;
+
 function addStudent() {
-   let baseurl = '/addstudent'
    let netid = $(this).val();
+   console.log(netid)
+   let start = $('#startInput').val();
+   let end = $('#endInput').val()
    netid = encodeURIComponent(netid);
-   let sel = selected();
-   let url = baseurl + `?sel=${sel}&netid=${netid}`
+   start = encodeURIComponent(start);
+   end = encodeURIComponent(end);
+   let url = `/addstudent?pst=${start}&pet=${end}&netid=${netid}`
    if (request != null)
       request.abort();
 
@@ -24,61 +43,34 @@ function addStudent() {
       {
          type: 'GET',
          url: url,
-         success: (res) => {
-            $('#selectedStudents').html(res)
-            updateMetrics(true)
+         success: function (res) {
+            let parsed = JSON.parse(res)
+            addStudentHelper(parsed);
+            getSearchResults();
          }
       }
    );
 }
+
+function removeStudentHelper(netid){
+   $(`.${netid}-comp`).remove(); // delete all elements for that class
+
+   if ($(".selected").length == 0)
+      $("#selectedStudents").hide();
+   else
+      $("#selectedStudents").show();
+
+   if ($(".selectedabsent").length == 0)
+      $("#activeAbsent").hide();
+   else
+      $("#activeAbsent").show();
+}
 function removeStudent() {
    let netid = $(this).val();
-   $(`.${netid}-comp`).remove(); // delete all elements for that class
-   if($(".selected").length == 0){
-      $("#selstudheader").remove();
-   }
+   removeStudentHelper(netid)
    getSearchResults()
 }
 
-let request = null;
-
-function updateMetrics(updateAll) {
-   if (request != null)
-      request.abort();
-   
-   let baseurl, updateMetricsSuccess;
-
-   if(updateAll) { // update all metrics
-      baseurl = '/updatemetrics';
-      updateMetricsSuccess = (res) =>{
-            let parsed = JSON.parse(res)
-            $('#activeWrapper').html(parsed.activehtml)
-            $('#periodDataWrapper').html(parsed.periodbody)
-            getSearchResults();
-            $(".loader").hide();
-      };
-   }
-   else { // only update the period metric
-      baseurl = '/updateperiod';
-      updateMetricsSuccess = (res)=>{
-         $('#periodDataWrapper').html(res)
-         getSearchResults();
-         $(".loader").hide();
-      };
- }
-   let start = $('#startInput').val();
-   let end = $('#endInput').val()
-   start = encodeURIComponent(start);
-   end = encodeURIComponent(end);
-   $(".loader").show()
-   request = $.ajax(
-      {
-         type: 'GET',
-         url: baseurl+`?pst=${start}&pet=${end}&sel=${selected()}`,
-         success: (res) => updateMetricsSuccess(res)
-      }
-   );
-}
 function getSearchResults() {
    let name = $('#nameID').val();
    let netid = $('#netID').val();
@@ -102,53 +94,37 @@ function getSearchResults() {
       }
    );
 }
-
-function setup() {
+// dom is ready function
+$(function () {
+   $('.selected').click(removeStudent)
+   $("#selectedStudents").hide()
+   $("#activeAbsent").hide()
    $('.searchinput').on('input', getSearchResults);
-   $('#all126').click(() => {
+   $('.searchbar-button').click(function (event) {
+      let start = $('#startInput').val();
+      let end = $('#endInput').val()
+      start = encodeURIComponent(start);
+      end = encodeURIComponent(end);
       if (request != null)
          request.abort();
 
-      request = $.ajax(
+         $(".loader").show()
+         request = $.ajax(
          {
             type: 'GET',
-            url: '/coursestudents?course=126',
+            url: `/coursestudents?pst=${start}&pet=${end}&sel=${selected()}&course=${encodeURIComponent(event.target.value)}`,
             success: (res) => {
-               $('#selectedStudents').html(res)
-               updateMetrics(true)
+               let parsed = JSON.parse(res);
+               for(let netid of parsed.remove){
+                  removeStudentHelper(netid)
+               }
+               for (let piece of parsed.add) {
+                  addStudentHelper(piece)
+               }   
+               $(".loader").hide()
+               getSearchResults()
             }
          }
       );
-   })
-   $('#all2xx').click(() => {
-      if (request != null)
-         request.abort();
-
-      request = $.ajax(
-         {
-            type: 'GET',
-            url: '/coursestudents?course=2xx',
-            success: (res) => {
-               $('#selectedStudents').html(res)
-               updateMetrics(true)
-            }
-         }
-      );
-   })
-   $('#allclear').click(() => {
-      if (request != null)
-         request.abort();
-
-      request = $.ajax(
-         {
-            type: 'GET',
-            url: '/coursestudents?course=none',
-            success: (res) => {
-               $('#selectedStudents').html(res)
-               updateMetrics(true)
-            }
-         }
-      );
-   })
-}
-$('document').ready(setup);
+   });
+});

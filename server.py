@@ -40,75 +40,79 @@ def home_page():
     return response
 
 
-# update the html for the selected list of students
-def update_student(selected_students):
-    html = ""
-    if selected_students:
-        html += '<h4 id="selstudheader">Selected Students</h4>\n'
-        for i in selected_students:
-            html += "<button class='selected {}-comp' value={}><span>{} ({})</span></button>\n".format(
-                    i, i, full_roster[i]['name'], i)
-        html += \
-            """
-    <script>
-    $('.selected').click(removeStudent)
-    </script>
-    """
-    response = make_response(html)
-    return response
-
-
 @app.route('/addstudent', methods=['GET'])
 def add_student():
-    netid = request.args.get('netid')
-    rawnetids = request.args.get('sel')
-    netids = rawnetids.split(',') if rawnetids else []
-    return update_student(netids+[netid])
+    return make_response(
+        json.dumps(
+            single_student_data(
+                request.args.get('netid')
+            )
+        )
+    )
+
+
+def single_student_data(netid):
+    activeHtml = None
+    activeDict = active(netid)
+    if activeDict['present']:
+        activeHtml = render_template('active/present.html', student=activeDict)
+    else:
+        activeHtml = render_template('active/absent.html', student=activeDict)
+
+    return {'periodhtml': periodDataHTML(netid),
+            'activehtml': activeHtml,
+            'present': activeDict['present'],
+            'selectedhtml': "<button class='selected {}-comp' value={}><span>{} ({})</span></button>\n".format(netid, netid, full_roster[netid]['name'], netid),
+            # TODO fix this please
+            'script': "<script>$('.selected').click(removeStudent)</script>"
+            }
 
 
 @app.route('/coursestudents', methods=['GET'])
 def course_students():
-    course = request.args.get('course')
-    if course == '126':
-        netids=[netid for netid in full_roster if '126' in full_roster[netid]['courses']]
-    elif course == '2xx':
-        netids=[netid for netid in full_roster if '226' in full_roster[netid]['courses']]
-    elif course == 'none':
-        netids = []
-    return update_student(netids)
+    rawnetids = request.args.get('sel')
+    alreadyThere = rawnetids.split(',') if rawnetids else []
+    print(alreadyThere)
+    course = {'126': '126', '2xx': '226', 'none':'clear'}[request.args.get('course')]
+    print(course)
+    add = set()
+    if course == 'clear':
+        remove = alreadyThere
+    else:
+        remove = set()
+        for netid in full_roster:
+            if course in full_roster[netid]['courses'] and netid not in alreadyThere:
+                add.add(netid)
+            elif course not in full_roster[netid]['courses'] and netid in alreadyThere:
+                remove.add(netid)
+        remove = list(remove)
+    print('add', add)
+    print('remove', remove)
+    return make_response(
+        json.dumps({
+            'add': [single_student_data(netid) for netid in add],
+            'remove': remove
+        })
+    )
 
 
-def periodDataHTML(netids):
+def periodDataHTML(netid):
     try:
         pst = request.args.get('pst')
         pet = request.args.get('pet')
-        periodVar = period(*time_format(pst, pet), netids)
+        netiddata = period(*time_format(pst, pet), netid)
+        return render_template('periodDataWrapper.html', netiddata=netiddata)
     except (ValueError, TypeError):
-        periodVar = {}
-    return render_template('periodDataWrapper.html', period=periodVar)
-
-
-@app.route('/updatemetrics', methods=['GET'])
-def update_metrics():
-    rawnetids = request.args.get('sel')
-    netids = rawnetids.split(',') if rawnetids else []
-    html = {'activehtml': render_template('active.html',
-                                          active=active(netids)),
-            'periodbody': periodDataHTML(netids)}
-    html = json.dumps(html)
-    response = make_response(html)
-    return response
+        return ""
 
 
 @app.route('/updateperiod', methods=['GET'])
 def update_period():
     rawnetids = request.args.get('sel')
     netids = rawnetids.split(',') if rawnetids else []
-    html = periodDataHTML(netids)
-    response = make_response(html)
+    jsonObj = json.dumps([periodDataHTML(netid) for netid in netids])
+    response = make_response(jsonObj)
     return response
-
-# JS route for adding students to the selected list
 
 
 @app.route('/students', methods=['GET'])
@@ -128,12 +132,7 @@ def search_students():
         for i in students:
             html += "<button class='searchresult' value={}><span>{} ({})</span></button>\n".format(
                 i, students[i], i)
-        html += \
-            """
-        <script>
-        $('.searchresult').click(addStudent)
-        </script>
-        """  # add javascript
+        html += """<script>$('.searchresult').click(addStudent)</script>"""
     elif code == 1:  # success, but too many results
         html += "<em>Too many results, try narrowing your search</em>"
     elif code == 2:  # empty result
@@ -153,87 +152,75 @@ def logout_route():
     auth.logout()
 
 
-@app.route('/about', methods=['GET'])
-def about_page():
-    html = render_template('about.html')
-    return make_response(html)
+def period(start_str, end_str, netid):
+    url = "https://www.labqueue.io/api/v1/requests/query/"
+    payload = {"is_open": "false",
+               "created_after": start_str,
+               "created_before": end_str,
+               "accepted_by": netid,
+               "page": 1
+               }
+    student_ret = {'days': {}, 'students_over': 0,
+                   'students': 0, 'netid': netid,
+                   'name': full_roster[netid]['name']}
+    while url:
+        json = requests.get(url, auth=wsse_auth, params=payload).json()
+        results = json['results']
+        for sess in results:
+            tc = datetime.strptime(
+                sess['time_closed'], DATE_TIME_FORMAT_STR)
+            ta = datetime.strptime(
+                sess['time_accepted'], DATE_TIME_FORMAT_STR)
+            length = (tc - ta).seconds // 60
+            if length < 2:
+                continue
+            day: str = sess['time_accepted'][:10]
+            if day not in student_ret['days']:
+                student_ret['days'][day] = []
+            student_ret['days'][day].append({
+                'start_time':   sess['time_accepted'][-5:],
+                'end_time':     sess['time_closed'][-5:],
+                'length':       length,
+                'colorclass':   ['not-over-limit', 'over-limit'][length > 25],
+                'student_info': "{} ({})".format(sess['author_full_name'], sess['course'][-3:])
+            })
+            student_ret['students'] += 1
+            student_ret['students_over'] += student_ret['days'][day][-1]['colorclass'] == 'over-limit'
+        url = json['next']
+        payload = {}  # ignore the params after the first run, included in the url going forward
 
-
-def period(start_str, end_str, netids):
-    ret = {}
-    for netid in netids:
-        url = "https://www.labqueue.io/api/v1/requests/query/"
-        payload = {"is_open": "false",
-                   "created_after": start_str,
-                   "created_before": end_str,
-                   "accepted_by": netid,
-                   "page": 1
-                   }
-        student_ret = {'days': {}, 'students_over': 0,
-                       'students': 0,
-                       'name': full_roster[netid]['name']}
-        while url:
-            json = requests.get(url, auth=wsse_auth, params=payload).json()
-            results = json['results']
-            for sess in results:
-                tc = datetime.strptime(
-                    sess['time_closed'], DATE_TIME_FORMAT_STR)
-                ta = datetime.strptime(
-                    sess['time_accepted'], DATE_TIME_FORMAT_STR)
-                length = (tc - ta).seconds // 60
-                if length < 2:
-                    continue
-                day: str = sess['time_accepted'][:10]
-                if day not in student_ret['days']:
-                    student_ret['days'][day] = []
-                student_ret['days'][day].append({
-                    'start_time':   sess['time_accepted'][-5:],
-                    'end_time':     sess['time_closed'][-5:],
-                    'length':       length,
-                    'colorclass':   ['notoverclass', 'overclass'][length > 25],
-                    'student_info': "{} ({})".format(sess['author_full_name'], sess['course'][-3:])
-                })
-                student_ret['students'] += 1
-                student_ret['students_over'] += student_ret['days'][day][-1]['colorclass'] == 'overclass'
-            url = json['next']
-            payload = {}  # ignore the params after the first run, included in the url going forward
-
-        ret[netid] = student_ret
-
-    return ret
+    return student_ret
 
 
 def shift():
     return {}
 
 
-def active(netids):
-    ret = {'present': [], 'absent': []}
-    for netid in netids:
-        url = "https://www.labqueue.io/api/v1/requests/query/"
-
-        current_time_obj = datetime.now()
-        # current_time_str = '2021-11-10T21:59'
-        # current_time_obj = datetime.strptime(current_time_str, DATE_TIME_FORMAT_STR)
-        payload = {
-            "is_open": "true",
-            # 'open_at_time': current_time_str,
-            # 'accepted_before': current_time_str,
-            "accepted_by": netid
+def active(netid):
+    url = "https://www.labqueue.io/api/v1/requests/query/"
+    current_time_obj = datetime.now()
+    # current_time_str = '2021-11-10T21:59'
+    # current_time_obj = datetime.strptime(current_time_str, DATE_TIME_FORMAT_STR)
+    payload = {
+        "is_open": "true",
+        # 'open_at_time': current_time_str,
+        # 'accepted_before': current_time_str,
+        "accepted_by": netid
+    }
+    sessions = requests.get(url=url,
+                            auth=wsse_auth,
+                            params=payload).json()['results']
+    if not sessions:  # student not in queue
+        return {
+            'present': False,
+            'netid': netid,
+            'name': full_roster[netid]['name']
         }
-        sessions = requests.get(url=url,
-                                auth=wsse_auth,
-                                params=payload).json()['results']
-        if not sessions:  # not in queue
-            ret['absent'].append({
-                'netid': netid,
-                'name': full_roster[netid]['name']
-                })
-            continue
+    else:
         sess = sessions.pop()
         ta = datetime.strptime(sess['time_accepted'], DATE_TIME_FORMAT_STR)
-
-        ret['present'].append({
+        return {
+            'present': True,
             'netid': netid,
             'info': "{} ({}) started current session with {} ({}) at {}, has been working for {} minutes.".format(
                 full_roster[netid]['name'],
@@ -243,8 +230,7 @@ def active(netids):
                 ta.strftime(TIME_FORMAT_STR),
                 (current_time_obj - ta).seconds // 60
             )
-        })
-    return ret
+        }
 
 
 @app.add_template_filter
@@ -273,7 +259,8 @@ def fill_roster():
             # some faculty grad_year values (cmorretti) are null instead of 0
             d['grad_year'] = d['grad_year'] if d['grad_year'] != None else 0
             ret[d['netid']] = {'name': d['full_name'],
-                               'year': d['grad_year'] % 100 + 2000, # some grad_year_values are 24 vs 2024
+                               # some grad_year_values are 24 vs 2024
+                               'year': d['grad_year'] % 100 + 2000,
                                'courses': [s[-3:] for s in d['courses']]}
         roster_url = full_dict['next']
     return ret

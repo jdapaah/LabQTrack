@@ -8,21 +8,9 @@
     </p>
 </div>
 <div id='activeBody' class="container-fluid">
-    {% for student in active['present'] %}
-    <div class="card {{info['netid']}}-comp">
-        <div class='row align-content-center'>
-            <div class="card-body">
-                {{ student['info'] }}
-            </div>
-        </div>
+    <div id="activePresent"></div>
+    <div id="activeAbsent">
+        <h5><em>Students not currently in Queue</em></h5>
+        <ul id="activeAbsentList"></ul>
     </div>
-    {% endfor %}
-    {% if active['absent']|length != 0 %}
-    <h5><em>Students not currently in Queue</em></h5>
-    <ul>
-        {% for student in active['absent'] %}
-        <li class="{{student['netid']}}-comp"><em>{{student['name']}}</em></li>
-        {% endfor %}
-    </ul>
-    {% endif %}
 </div>
