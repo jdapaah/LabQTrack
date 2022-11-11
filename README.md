@@ -1,3 +1,5 @@
+--- Personal Repository Archived - Now Managed at [PrincetonUCA/QTrack](https://github.com/PrincetonCS-UCA/QTrack) ---
+
 # QTrack
 
 This project seeks to help the Princeton University COS Lab TA program track the attendance of their employees. As a Princeton University internal tool that manages student informaton, the site is registered behind CAS authenitication and cannot be accessed by the public.
